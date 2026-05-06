@@ -1,0 +1,71 @@
+# -----------------------
+# macOS system files
+# -----------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails, Finder metadata
+._*
+.Spotlight-V100/
+.Trashes/
+.DocumentRevisions-V100/
+
+# -----------------------
+# VS Code
+# -----------------------
+.vscode/
+*.code-workspace
+
+# -----------------------
+# Python
+# -----------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+env/
+venv/
+*.egg-info/
+*.pytest_cache/
+
+# -----------------------
+# R
+# -----------------------
+.Rhistory
+.RData
+.Rproj.user/
+.RDataTmp
+.Rapp.history
+
+# -----------------------
+# Bash / general
+# -----------------------
+*.log
+*.tmp
+*.swp   # Vim temporary files
+
+
+# -----------------------
+# Project
+# -----------------------
+archive/
+backups/
+data/
+results/*
+!results/plots/
+!results/reports/
+!results/tables/
+src/*
+!src/scripts/
+
+# -----------------------------
+# Jupyter / IPython
+# -----------------------------
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# JupyterLab config & workspaces
+.jupyter/
+**/.jupyter/desktop-workspaces/
+*.jupyterlab-workspace
