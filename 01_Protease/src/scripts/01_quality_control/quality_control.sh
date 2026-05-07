@@ -2,16 +2,15 @@
 
 
 #==============================================================================#
-# Script Name: [].sh
+# Script Name: quality_control.sh
 #
-# Last updated: []/[]/[] (dd/mm/yyyy)
+# Last updated: 07/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   []
+#   Perform quality control (QC) testing of raw read FASTQ files.
 #
 # Usage:
-#   Execute from script directory using:
-#     sbatch [].sh
+#     sbatch <PATH_TO_SCRIPT>/quality_control.sh
 #
 # VERSION: 1.0
 #
@@ -29,15 +28,15 @@
 #==========================#
 # SLURM SUBMISSION      
 #==========================#
-#SBATCH --partition=<cluster>                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
-#SBATCH --nodes=1                                      # Number of nodes
-#SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=1                              # Number of cores
-#SBATCH --mem=16G                                      # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=<myjob>                             # Name assigned to job allocation
-#SBATCH --output=../../logs/$0/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/$0/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --partition=defq                                                     # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
+#SBATCH --nodes=1                                                            # Number of nodes
+#SBATCH --ntasks=1                                                           # Number of tasks 
+#SBATCH --cpus-per-task=4                                                    # Number of cores
+#SBATCH --mem=32G                                                            # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=02:00:00                                                      # Run time limit (hh:mm:ss)
+#SBATCH --job-name=quality_control                                           # Name assigned to job allocation
+#SBATCH --output=../../logs/01_quality_control/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/01_quality_control/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -59,13 +58,14 @@ set -euo pipefail
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
 #   2. Set project root (2 levels above script directory)
-ROOT="$(realpath "${SCRIPT_DIR}/../..")"
+PROJECT_ROOT="$(realpath "${SCRIPT_DIR}/../..")"
 
 #   3. Confirm file paths
 echo "$(date)"
 echo "Initiating script: $SLURM_JOB_NAME"
-echo "Project Root: $ROOT"
+echo "Project Root: $PROJECT_ROOT"
 echo "Script Directory: $SCRIPT_DIR"
+
 
 
 #==========================#
@@ -73,7 +73,7 @@ echo "Script Directory: $SCRIPT_DIR"
 #==========================#
 
 # Define Conda environment
-CONDA_ENV="[]"
+CONDA_ENV="L4137_01_Protease"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -107,12 +107,10 @@ timestamp() {
 
 ###==== Files ====###
 
-# No input files required
-
-
+# All FASTQ files containing the NGS sequencing output
+RAW_READS=${PROJECT_ROOT}/data/raw_data/*fastq.gz
 
 ###==== Directories ====###
-
 # No input directories required
 
 
@@ -120,6 +118,7 @@ timestamp() {
 #==========================#
 # OUTPUTS      
 #==========================#
+
 ###==== Files ====###
 
 # No output files required
@@ -128,18 +127,20 @@ timestamp() {
 
 ###==== Directories ====###
 
-# No output directories required
+# Directory for all output quality reports
+OUTDIR_FASTQC="${PROJECT_ROOT}/results/reports/fastqc"
 
-DIR1='[]'
-DIR2='[]'
+
 
 # Combine directories into array for simultaenous creation later
-DIR_LIST=("$DIR1" "$DIR2")
+DIR_LIST=("$OUTDIR_FASTQC")
+
+
 
 #==========================#
 # CONFIGURATION      
 #==========================#
-# [quality variables]
+# No specific configuration necessary
 
 
 
@@ -169,8 +170,19 @@ done
 # MAIN SCRIPT      
 #==========================#
 
+# Check if FASTQ files exist
+# Exit status 1 if files not found
+if [ ${#RAW_READS[@]} -eq 0 ]; then
+    echo "Error: No FASTQ files found in ${PROJECT_ROOT}/data/raw_data/"
+    echo "Execute 01_preprocessing.sh then re-run this script"
+    exit 1
+fi
 
-
+# Run FastQC to generate QC reports
+fastqc \
+$RAW_READS \
+-o "$OUTDIR_FASTQC" \
+-t $SLURM_CPUS_PER_TASK
 
 
 

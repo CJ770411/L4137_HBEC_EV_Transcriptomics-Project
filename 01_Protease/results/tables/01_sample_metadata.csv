@@ -1,0 +1,16 @@
+﻿Condition,Treatment,Replicate,Sequencing ID,File Size
+PBS_03,Untreated,1,NGS-110-028_S28_R1_001,354M
+PBS_04,Untreated,2,NGS-110-016_S16_R1_001,374M
+PBS_06,Untreated,3,NGS-110-007_S7_R1_001,282M
+0_005_ug_mL_Protease_01,Treated,1,NGS-110-029_S29_R1_001,318M
+0_005_ug_mL_Protease_11,Treated,2,NGS-110-017_S17_R1_001,365M
+0_005_ug_mL_Protease_14,Treated,3,NGS-110-011_S11_R1_001,373M
+0_08_ug_mL_Protease_13,Treated,1,NGS-110-012_S12_R1_001,371M
+0_08_ug_mL_Protease_08,Treated,2,NGS-110-025_S25_R1_001,397M
+0_08_ug_mL_Protease_09,Treated,3,NGS-110-006_S6_R1_001,314M
+2_ug_mL_Protease_02,Treated,1,NGS-110-004_S4_R1_001,383M
+2_ug_mL_Protease_05,Treated,2,NGS-110-026_S26_R1_001,405M
+2_ug_mL_Protease_07,Treated,3,NGS-110-003_S3_R1_001,355M
+24_ug_mL_Protease_10,Treated,1,NGS-110-030_S30_R1_001,360M
+24_ug_mL_Protease_12,Treated,2,NGS-110-019_S19_R1_001,373M
+24_ug_mL_Protease_15,Treated,3,NGS-110-008_S8_R1_001,348M
