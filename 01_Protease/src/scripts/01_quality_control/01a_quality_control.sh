@@ -2,16 +2,15 @@
 
 
 #==============================================================================#
-# Script Name: [].sh
+# Script Name: 01a_quality_control.sh
 #
-# Last updated: []/[]/[] (dd/mm/yyyy)
+# Last updated: 08/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   []
+#   Perform quality control (QC) testing of raw read FASTQ files.
 #
 # Usage:
-#   Execute from script directory using:
-#     sbatch [].sh
+#     sbatch <PATH_TO_SCRIPT>/quality_control.sh
 #
 # VERSION: 1.0
 #
@@ -32,15 +31,15 @@
 #   SLURM Submission: Defines the SLRUM parameters required to execute
 #                     all steps of this script
 
-#SBATCH --partition=<cluster>                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
-#SBATCH --nodes=1                                      # Number of nodes
-#SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=1                              # Number of cores
-#SBATCH --mem=16G                                      # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=<myjob>                             # Name assigned to job allocation
-#SBATCH --output=../../logs/[]/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/[]/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --partition=defq                                                     # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
+#SBATCH --nodes=1                                                            # Number of nodes
+#SBATCH --ntasks=1                                                           # Number of tasks 
+#SBATCH --cpus-per-task=4                                                    # Number of cores
+#SBATCH --mem=32G                                                            # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=02:00:00                                                      # Run time limit (hh:mm:ss)
+#SBATCH --job-name=01a_quality_control                                       # Name assigned to job allocation
+#SBATCH --output=../../logs/01_quality_control/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/01_quality_control/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -52,7 +51,6 @@
 set -eo pipefail
 
 
-
 #==========================#
 # LOG HANDLING
 #==========================#
@@ -60,7 +58,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=../../logs/[]
+LOG_DIR=../../logs/01_quality_control
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -72,8 +70,8 @@ LOG="${LOG_DIR}/${SLURM_JOB_NAME}_${LOG_ID}_log.txt"
 # Set unique log file name
 # Loop to increase log ID identifier by 1 until unique ID found
 while [[ -f "$LOG" ]]; do
-	LOG_ID=$((LOG_ID + 1)) # Increase identifier by 1
-	LOG="${LOG_DIR}/${SLURM_JOB_NAME}_${LOG_ID}_log.txt" # Save log file with unique identifier
+    LOG_ID=$((LOG_ID + 1)) # Increase identifier by 1
+    LOG="${LOG_DIR}/${SLURM_JOB_NAME}_${LOG_ID}_log.txt" # Save log file with unique identifier
 done 
 
 
@@ -125,7 +123,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="[]"
+CONDA_ENV="L4137_01_Protease"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -139,7 +137,7 @@ else
     exit 1
 fi
 conda activate "$CONDA_ENV"
-echo "Conda Environemnt:" "$CONDA_ENV" >> "$LOG"
+echo "Conda Environemnt: " "$CONDA_ENV" >> "$LOG"
 
 # Completion message
 echo "==> Setting up environment: Finished" >> "$LOG"
@@ -170,9 +168,9 @@ timestamp() {
 # Initiation message
 echo "==> Setting input files" >> "$LOG"
 
-# All FASTQ files containing the NGS sequencing output
-RAW_READS=${PROJECT_ROOT}/data/raw_data/*fastq.gz
-echo "Input file:" "$RAW_READS" >> "$LOG"
+# All FASTQ files containing the NGS sequencing output as array
+RAW_READS=("${PROJECT_ROOT}"/data/raw_data/*.fastq.gz)
+echo "$(timestamp)" "Input file: " "$RAW_READS" >> "$LOG"
 
 # Completion message
 echo "==> Setting input files: Finished" >> "$LOG"
@@ -211,11 +209,11 @@ echo "==> Setting output files: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting output directories" >> "$LOG"
 
-DIR1='[]'
-DIR2='[]'
+# Directory for all output quality reports
+OUTDIR_FASTQC="${PROJECT_ROOT}/results/reports/fastqc"
 
 # Combine directories into array for simultaenous creation later
-DIR_LIST=("$DIR1" "$DIR2")
+DIR_LIST=("$OUTDIR_FASTQC")
 echo "Output directories required:" >> "$LOG"
 echo "$DIR_LIST" >> "$LOG"
 
@@ -239,10 +237,10 @@ echo "==> Verifying/creating output directories" >> "$LOG"
 #   3) Prints completion message defining action taken
 for directory in "${DIR_LIST[@]}"; do
     if [ -d "${directory}" ]; then
-        echo "Directory exists:" "${directory}" >> "$LOG"
+        echo "Directory exists: " "${directory}" >> "$LOG"
     else
         mkdir -p "${directory}"
-        echo "Directory created:" "${directory}" >> "$LOG"
+        echo "Directory created: " "${directory}" >> "$LOG"
     fi
 done
 
@@ -259,7 +257,6 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting parameters" >> "$LOG"
 
-
 # No specific configuration necessary
 echo "No user-defined configuration necessary" >> "$LOG"
 
@@ -274,12 +271,24 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 
 
 # Initiation message
-echo "$(timestamp)" "==> Initiating []" >> "$LOG"
+echo "$(timestamp)" "==> Initiating FastQC" >> "$LOG"
 
+# Check if FASTQ files exist
+# Exit status 1 if files not found
+if [ ${#RAW_READS[@]} -eq 0 ]; then
+    echo "Error: No FASTQ files found in ${PROJECT_ROOT}/data/raw_data/"
+    echo "Execute 01_preprocessing.sh then re-run this script"
+    exit 1
+fi
 
+# Run FastQC to generate QC reports
+fastqc \
+"${RAW_READS[@]}" \
+-o "$OUTDIR_FASTQC" \
+-t $SLURM_CPUS_PER_TASK
 
 # Completion message
-echo "$(timestamp)" "==> [] Finished" >> "$LOG"
+echo "$(timestamp)" "==> FastQC Finished" >> "$LOG"
 
 
 
