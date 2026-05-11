@@ -2,19 +2,20 @@
 
 
 #==============================================================================#
-# Script Name: [].sh
+# Script Name: 02b_trimming.sh
 #
-# Last updated: []/[]/[] (dd/mm/yyyy)
+# Last updated: 11/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   []
+#   - Remove low-quality data (reads with low-certainty base calls)
+#   - Remove adapter contamination (PCR by-product)
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch [].sh
+#     sbatch 02b_trimming.sh
 #
 # Software:
-#   []
+#   cutadapt v5.2
 #
 # VERSION: 1.0
 #
@@ -35,15 +36,15 @@
 #   SLURM Submission: Defines the SLRUM parameters required to execute
 #                     all steps of this script
 
-#SBATCH --partition=<cluster>                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
+#SBATCH --partition=defq                               # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
 #SBATCH --nodes=1                                      # Number of nodes
 #SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=1                              # Number of cores
-#SBATCH --mem=16G                                      # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=<myjob>                             # Name assigned to job allocation
-#SBATCH --output=../../logs/[]/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/[]/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --cpus-per-task=16                             # Number of cores
+#SBATCH --mem=32G                                      # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
+#SBATCH --job-name=02b_trimming                             # Name assigned to job allocation
+#SBATCH --output=../../logs/02_quality_control/02b_trimming/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/02_quality_control/02b_trimming/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -63,7 +64,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=../../logs/[]
+LOG_DIR=../../logs/02_quality_control/02b_trimming
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -128,7 +129,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="[]"
+CONDA_ENV="L4137_01_Protease_cutadapt"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -215,13 +216,14 @@ echo "==> Setting output files: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting output directories" >> "$LOG"
 
-DIR1='[]'
-DIR2='[]'
+# Directory for all output quality reports
+OUTDIR_CUTADAPT="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02b_trimming"
 
 # Combine directories into array for simultaenous creation later
-DIR_LIST=("$DIR1" "$DIR2")
+DIR_LIST=("$OUTDIR_CUTADAPT")
 echo "Output directories required:" >> "$LOG"
 echo "${DIR_LIST[@]}" >> $LOG
+
 
 # Completion message
 echo "==> Setting output directories: Finished" >> "$LOG"
@@ -265,7 +267,15 @@ echo "==> Setting parameters" >> "$LOG"
 
 
 # No specific configuration necessary
-echo "No user-defined configuration necessary" >> "$LOG"
+MIN_LENGTH=17
+MAX_LENGTH=30
+MIN_QUAL=30
+
+echo "Quality Filters:" >> "$LOG" 
+echo "MIN_LENGTH=17" >> "$LOG" 
+echo "MAX_LENGTH=30" >> "$LOG" 
+echo "MIN_QUAL=30" >> "$LOG" 
+
 
 # Completion message
 echo "==> Setting parameters: Finished" >> "$LOG"
@@ -278,12 +288,25 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 
 
 # Initiation message
-echo "$(timestamp)" "==> Initiating []" >> "$LOG"
+echo "$(timestamp)" "==> Initiating cutadapt" >> "$LOG"
 
+# Run cutadapt to trim raw read data for each sample
+for sample in ${RAW_READS[@]}; do
 
+    SAMPLE_NAME=$(basename "$sample" .fastq.gz)
+
+    cutadapt \
+        -j "$SLURM_CPUS_PER_TASK" \
+        -m $MIN_LENGTH \
+        -M $MAX_LENGTH \
+        -q $MIN_QUAL \
+        -o "${OUTDIR_CUTADAPT}/${SAMPLE_NAME}_trimmed.fastq.gz" \
+        "$sample"
+
+done
 
 # Completion message
-echo "$(timestamp)" "==> [] Finished" >> "$LOG"
+echo "$(timestamp)" "==> cutadapt Finished" >> "$LOG"
 
 
 

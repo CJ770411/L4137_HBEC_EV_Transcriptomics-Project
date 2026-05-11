@@ -2,19 +2,20 @@
 
 
 #==============================================================================#
-# Script Name: [].sh
+# Script Name: 02a_raw_reads_qc.sh
 #
-# Last updated: []/[]/[] (dd/mm/yyyy)
+# Last updated: 08/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   []
+#   - Perform quality control (QC) testing of raw read FASTQ files.
+#   - Examine various quality metrics per sample.
 #
 # Usage:
-#   Execute from script directory using:
-#     sbatch [].sh
+#     sbatch <PATH_TO_SCRIPT>/quality_control.sh
 #
 # Software:
-#   []
+#   FastQC v0.12.1
+#   miRTrace v1.0.1
 #
 # VERSION: 1.0
 #
@@ -35,15 +36,15 @@
 #   SLURM Submission: Defines the SLRUM parameters required to execute
 #                     all steps of this script
 
-#SBATCH --partition=<cluster>                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
-#SBATCH --nodes=1                                      # Number of nodes
-#SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=1                              # Number of cores
-#SBATCH --mem=16G                                      # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=<myjob>                             # Name assigned to job allocation
-#SBATCH --output=../../logs/[]/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/[]/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --partition=defq                                                     # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
+#SBATCH --nodes=1                                                            # Number of nodes
+#SBATCH --ntasks=1                                                           # Number of tasks 
+#SBATCH --cpus-per-task=4                                                    # Number of cores
+#SBATCH --mem=32G                                                            # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=02:00:00                                                      # Run time limit (hh:mm:ss)
+#SBATCH --job-name=02a_raw_reads_qc                                       # Name assigned to job allocation
+#SBATCH --output=../../logs/02_quality_control/02a_raw_reads_qc/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/02_quality_control/02a_raw_reads_qc/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -55,7 +56,6 @@
 set -eo pipefail
 
 
-
 #==========================#
 # LOG HANDLING
 #==========================#
@@ -63,7 +63,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=../../logs/[]
+LOG_DIR=../../logs/02_quality_control/02a_raw_reads_qc
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -78,6 +78,7 @@ while [[ -f "$LOG" ]]; do
     LOG_ID=$((LOG_ID + 1)) # Increase identifier by 1
     LOG="${LOG_DIR}/${SLURM_JOB_NAME}_$(date '+%y-%m-%d')_log_${LOG_ID}.txt" # Save log file with unique identifier
 done 
+
 
 
 # Script initialisation message
@@ -128,7 +129,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="[]"
+CONDA_ENV="L4137_01_Protease"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -142,7 +143,7 @@ else
     exit 1
 fi
 conda activate "$CONDA_ENV"
-echo "Conda Environemnt:" "$CONDA_ENV" >> "$LOG"
+echo "Conda Environemnt: " "$CONDA_ENV" >> "$LOG"
 
 # Completion message
 echo "==> Setting up environment: Finished" >> "$LOG"
@@ -173,8 +174,8 @@ timestamp() {
 # Initiation message
 echo "==> Setting input files" >> "$LOG"
 
-# All FASTQ files containing the NGS sequencing output
-RAW_READS=${PROJECT_ROOT}/data/raw_data/*fastq.gz
+# All FASTQ files containing the NGS sequencing output as array
+RAW_READS=("${PROJECT_ROOT}"/data/raw/*.fastq.gz)
 echo "Input file(s):" >> "$LOG"
 echo "${RAW_READS[@]}" >> $LOG
 
@@ -215,11 +216,13 @@ echo "==> Setting output files: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting output directories" >> "$LOG"
 
-DIR1='[]'
-DIR2='[]'
+# Directory for all output quality reports
+OUTDIR_FASTQC="${PROJECT_ROOT}/results/methods_sections/02_raw_reads_qc/02a_raw_reads_qc/fastqc"
+OUTDIR_MIRTRACE_TRACE="${PROJECT_ROOT}/results/methods_sections/02_raw_reads_qc/02a_raw_reads_qc/mirtrace/trace"
+OUTDIR_MIRTRACE_QC="${PROJECT_ROOT}/results/methods_sections/02_raw_reads_qc/02a_raw_reads_qc/mirtrace/qc"
 
 # Combine directories into array for simultaenous creation later
-DIR_LIST=("$DIR1" "$DIR2")
+DIR_LIST=("$OUTDIR_FASTQC" "$OUTDIR_MIRTRACE_TRACE" "$OUTDIR_MIRTRACE_QC")
 echo "Output directories required:" >> "$LOG"
 echo "${DIR_LIST[@]}" >> $LOG
 
@@ -243,10 +246,10 @@ echo "==> Verifying/creating output directories" >> "$LOG"
 #   3) Prints completion message defining action taken
 for directory in "${DIR_LIST[@]}"; do
     if [ -d "${directory}" ]; then
-        echo "Directory exists:" "${directory}" >> "$LOG"
+        echo "Directory exists: " "${directory}" >> "$LOG"
     else
         mkdir -p "${directory}"
-        echo "Directory created:" "${directory}" >> "$LOG"
+        echo "Directory created: " "${directory}" >> "$LOG"
     fi
 done
 
@@ -263,7 +266,6 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting parameters" >> "$LOG"
 
-
 # No specific configuration necessary
 echo "No user-defined configuration necessary" >> "$LOG"
 
@@ -276,14 +278,56 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 #   Main Script: Executes the main body of code which produces 
 #                the outputs of the script
 
+# Check if FASTQ files exist
+# Exit status 1 if files not found
+if [ ${#RAW_READS[@]} -eq 0 ]; then
+    echo "Error: No FASTQ files found in ${PROJECT_ROOT}/data/raw/"
+    echo "Execute 01_data_preparation then re-run this script"
+    exit 1
+fi
+
+###==== FastQC ====###
 
 # Initiation message
-echo "$(timestamp)" "==> Initiating []" >> "$LOG"
+echo "$(timestamp)" "==> Initiating FastQC" >> "$LOG"
 
 
+# Run FastQC to generate QC reports
+fastqc \
+"${RAW_READS[@]}" \
+-o "$OUTDIR_FASTQC" \
+-t $SLURM_CPUS_PER_TASK
 
 # Completion message
-echo "$(timestamp)" "==> [] Finished" >> "$LOG"
+echo "$(timestamp)" "==> FastQC Finished" >> "$LOG"
+
+
+
+###==== miRTrace ====###
+
+# Initiation message
+echo "$(timestamp)" "==> Initiating miRTrace" >> "$LOG"
+
+
+# Run miRTrace to generate trace QC reports
+mirtrace \
+trace \
+-o "$OUTDIR_MIRTRACE_TRACE" \
+-f \
+-t $SLURM_CPUS_PER_TASK \
+"${RAW_READS[@]}" \
+
+# Run miRTrace to generate QC reports
+mirtrace \
+qc \
+-s hsa \
+-o "$OUTDIR_MIRTRACE_QC" \
+-f \
+-t $SLURM_CPUS_PER_TASK \
+"${RAW_READS[@]}" \
+
+# Completion message
+echo "$(timestamp)" "==> miRTrace Finished" >> "$LOG"
 
 
 

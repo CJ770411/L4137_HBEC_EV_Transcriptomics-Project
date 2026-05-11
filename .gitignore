@@ -58,6 +58,7 @@ results/*
 !results/tables/
 src/*
 !src/scripts/
+01_Protease/results/*
 
 # -----------------------------
 # Jupyter / IPython
@@ -69,3 +70,7 @@ src/*
 .jupyter/
 **/.jupyter/desktop-workspaces/
 *.jupyterlab-workspace
+
+
+
+
