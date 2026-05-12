@@ -9,6 +9,7 @@
 # Purpose:
 #   - Perform quality control (QC) testing of raw read FASTQ files.
 #   - Examine various quality metrics per sample.
+#   - Compile QC results for all samples into one report.
 #
 # Usage:
 #     sbatch <PATH_TO_SCRIPT>/quality_control.sh
@@ -16,6 +17,7 @@
 # Software:
 #   FastQC v0.12.1
 #   miRTrace v1.0.1
+#   MultiQC v1.34
 #
 # VERSION: 1.0
 #
@@ -187,8 +189,12 @@ echo "==> Setting input files: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting input directories" >> "$LOG"
 
-# No input directories required
-echo "No input directories required" >> "$LOG"
+# Parent directory of all QC reports for individual samples from:
+# 1. FastQC
+# 2. miRTrace
+INDIR_SAMPLE_REPORTS="${PROJECT_ROOT}"/results/methods_sections/02_quality_control/02a_raw_reads_qc
+echo "Input directory:" >> "$LOG"
+echo "${INDIR_SAMPLE_REPORTS}" >> $LOG
 
 # Completion message
 echo "==> Setting input directories: Finished" >> "$LOG"
@@ -217,12 +223,13 @@ echo "==> Setting output files: Finished" >> "$LOG"
 echo "==> Setting output directories" >> "$LOG"
 
 # Directory for all output quality reports
-OUTDIR_FASTQC="${PROJECT_ROOT}/results/methods_sections/02_raw_reads_qc/02a_raw_reads_qc/fastqc"
-OUTDIR_MIRTRACE_TRACE="${PROJECT_ROOT}/results/methods_sections/02_raw_reads_qc/02a_raw_reads_qc/mirtrace/trace"
-OUTDIR_MIRTRACE_QC="${PROJECT_ROOT}/results/methods_sections/02_raw_reads_qc/02a_raw_reads_qc/mirtrace/qc"
+OUTDIR_FASTQC="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02a_raw_reads_qc/fastqc"
+OUTDIR_MIRTRACE_TRACE="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02a_raw_reads_qc/mirtrace/trace"
+OUTDIR_MIRTRACE_QC="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02a_raw_reads_qc/mirtrace/qc"
+OUTDIR_MULTIQC="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02a_raw_reads_qc/multiqc"
 
 # Combine directories into array for simultaenous creation later
-DIR_LIST=("$OUTDIR_FASTQC" "$OUTDIR_MIRTRACE_TRACE" "$OUTDIR_MIRTRACE_QC")
+DIR_LIST=("$OUTDIR_FASTQC" "$OUTDIR_MIRTRACE_TRACE" "$OUTDIR_MIRTRACE_QC" "$OUTDIR_MULTIQC")
 echo "Output directories required:" >> "$LOG"
 echo "${DIR_LIST[@]}" >> $LOG
 
@@ -328,6 +335,21 @@ qc \
 
 # Completion message
 echo "$(timestamp)" "==> miRTrace Finished" >> "$LOG"
+
+
+###==== MultiQC ====###
+
+# Initiation message
+echo "$(timestamp)" "==> Initiating MultiQC" >> "$LOG"
+
+
+# Run MultiQC to merge all individual sample QC reports into one report
+multiqc \
+-o "$OUTDIR_MULTIQC" \
+"$INDIR_SAMPLE_REPORTS"
+
+# Completion message
+echo "$(timestamp)" "==> MultiQC Finished" >> "$LOG"
 
 
 

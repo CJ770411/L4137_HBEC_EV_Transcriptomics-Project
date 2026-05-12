@@ -7,7 +7,7 @@
 # Last updated: 11/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   - Remove low-quality data (reads with low-certainty base calls)
+#   - Isolate miRNA reads
 #   - Remove adapter contamination (PCR by-product)
 #
 # Usage:
@@ -175,7 +175,7 @@ timestamp() {
 echo "==> Setting input files" >> "$LOG"
 
 # All FASTQ files containing the NGS sequencing output
-RAW_READS=${PROJECT_ROOT}/data/raw_data/*fastq.gz
+RAW_READS=(${PROJECT_ROOT}/data/raw/*fastq.gz)
 echo "Input file(s):" >> "$LOG"
 echo "${RAW_READS[@]}" >> $LOG
 
@@ -217,7 +217,7 @@ echo "==> Setting output files: Finished" >> "$LOG"
 echo "==> Setting output directories" >> "$LOG"
 
 # Directory for all output quality reports
-OUTDIR_CUTADAPT="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02b_trimming"
+OUTDIR_CUTADAPT="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02b_trimming/cutadapt"
 
 # Combine directories into array for simultaenous creation later
 DIR_LIST=("$OUTDIR_CUTADAPT")
@@ -266,15 +266,13 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 echo "==> Setting parameters" >> "$LOG"
 
 
-# No specific configuration necessary
+# Quality filters:
 MIN_LENGTH=17
 MAX_LENGTH=30
-MIN_QUAL=30
 
 echo "Quality Filters:" >> "$LOG" 
-echo "MIN_LENGTH=17" >> "$LOG" 
-echo "MAX_LENGTH=30" >> "$LOG" 
-echo "MIN_QUAL=30" >> "$LOG" 
+echo "MIN_LENGTH=$MIN_LENGTH" >> "$LOG" 
+echo "MAX_LENGTH=$MAX_LENGTH" >> "$LOG" 
 
 
 # Completion message
@@ -291,15 +289,15 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 echo "$(timestamp)" "==> Initiating cutadapt" >> "$LOG"
 
 # Run cutadapt to trim raw read data for each sample
-for sample in ${RAW_READS[@]}; do
+for sample in "${RAW_READS[@]}"; do
 
     SAMPLE_NAME=$(basename "$sample" .fastq.gz)
 
     cutadapt \
         -j "$SLURM_CPUS_PER_TASK" \
-        -m $MIN_LENGTH \
-        -M $MAX_LENGTH \
-        -q $MIN_QUAL \
+        -a TGGAATTCTCGGGTGCCAAGG \
+        -m "$MIN_LENGTH" \
+        -M "$MAX_LENGTH" \
         -o "${OUTDIR_CUTADAPT}/${SAMPLE_NAME}_trimmed.fastq.gz" \
         "$sample"
 
