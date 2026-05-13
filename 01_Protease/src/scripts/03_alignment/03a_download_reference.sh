@@ -2,20 +2,25 @@
 
 
 #==============================================================================#
-# Script Name: 02b_trimming.sh
+# Script Name: 03a_download_references.sh
 #
-# Last updated: 11/05/2026 (dd/mm/yyyy)
+# Last updated: 13/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   - Isolate miRNA reads
-#   - Remove adapter contamination (PCR by-product)
+#   - Download reference files necessary to create bowtie index and perform alignment. 
+#     References to download:
+#       1. (Ensembl) Homo sapiens genome 
+#       2. (miRBase) Mature miRNA sequences
+#       3. (miRBase) Hairpin miRNA sequences
+#   - Clean up raw reference files for compatability with downstream software.
+#   - Extract only Homo sapiens data from miRBase files.
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch 02b_trimming.sh
+#     sbatch 03a_download_references.sh
 #
 # Software:
-#   cutadapt v5.2
+#   miRDeep2 v2.0.1.3
 #
 # VERSION: 1.0
 #
@@ -36,15 +41,15 @@
 #   SLURM Submission: Defines the SLRUM parameters required to execute
 #                     all steps of this script
 
-#SBATCH --partition=defq                               # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
+#SBATCH --partition=defq                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
 #SBATCH --nodes=1                                      # Number of nodes
 #SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=16                             # Number of cores
-#SBATCH --mem=32G                                      # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=02b_trimming                             # Name assigned to job allocation
-#SBATCH --output=../../logs/02_quality_control/02b_trimming/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/02_quality_control/02b_trimming/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --cpus-per-task=1                              # Number of cores
+#SBATCH --mem=2G                                       # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=00:05:00                                # Run time limit (hh:mm:ss)
+#SBATCH --job-name=03a_download_references                             # Name assigned to job allocation
+#SBATCH --output=../../logs/03_alignment/03a_download_references/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/03_alignment/03a_download_references/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -64,7 +69,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=../../logs/02_quality_control/02b_trimming
+LOG_DIR=../../logs/03_alignment/03a_download_references
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -129,7 +134,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease_cutadapt"
+CONDA_ENV="L4137_01_Protease_bowtie"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -143,7 +148,7 @@ else
     exit 1
 fi
 conda activate "$CONDA_ENV"
-echo "Conda Environemnt:" "$CONDA_ENV" >> "$LOG"
+echo "Conda Environment: " "$CONDA_ENV" >> "$LOG"
 
 # Completion message
 echo "==> Setting up environment: Finished" >> "$LOG"
@@ -174,10 +179,8 @@ timestamp() {
 # Initiation message
 echo "==> Setting input files" >> "$LOG"
 
-# All FASTQ files containing the NGS sequencing output
-RAW_READS=(${PROJECT_ROOT}/data/raw/*fastq.gz)
-echo "Input file(s):" >> "$LOG"
-echo "${RAW_READS[@]}" >> "$LOG"
+# No input files required
+echo "No input files required" >> "$LOG"
 
 # Completion message
 echo "==> Setting input files: Finished" >> "$LOG"
@@ -216,14 +219,14 @@ echo "==> Setting output files: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting output directories" >> "$LOG"
 
-# Directory for all output quality reports
-OUTDIR_CUTADAPT="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02b_trimming/cutadapt"
+# Directories for reference data files
+OUTDIR_HSAPIENS="${PROJECT_ROOT}/data/reference/GRCh38.p14"
+OUTDIR_MIRNA="${PROJECT_ROOT}/data/reference/miRNA"
 
 # Combine directories into array for simultaenous creation later
-DIR_LIST=("$OUTDIR_CUTADAPT")
+DIR_LIST=("$OUTDIR_HSAPIENS" "$OUTDIR_MIRNA/mature" "$OUTDIR_MIRNA/hairpin")
 echo "Output directories required:" >> "$LOG"
 echo "${DIR_LIST[@]}" >> $LOG
-
 
 # Completion message
 echo "==> Setting output directories: Finished" >> "$LOG"
@@ -266,14 +269,8 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 echo "==> Setting parameters" >> "$LOG"
 
 
-# Quality filters:
-MIN_LENGTH=17
-MAX_LENGTH=30
-
-echo "Quality Filters:" >> "$LOG" 
-echo "MIN_LENGTH=$MIN_LENGTH" >> "$LOG" 
-echo "MAX_LENGTH=$MAX_LENGTH" >> "$LOG" 
-
+# No specific configuration necessary
+echo "No user-defined configuration necessary" >> "$LOG"
 
 # Completion message
 echo "==> Setting parameters: Finished" >> "$LOG"
@@ -285,26 +282,59 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 #                the outputs of the script
 
 
+
+###==== Genome ====###
+
+# Navigate to reference directory
+cd "$OUTDIR_HSAPIENS"
+
 # Initiation message
-echo "$(timestamp)" "==> Initiating cutadapt" >> "$LOG"
+echo "$(timestamp)" "==> Downloading Homo sapiens genome from Ensembl" >> "$LOG"
 
-# Run cutadapt to trim raw read data for each sample
-for sample in "${RAW_READS[@]}"; do
+# Download zipped FASTA reference file
+wget https://ftp.ensembl.org/pub/release-115/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
 
-    SAMPLE_NAME=$(basename "$sample" .fastq.gz)
+# Unzip FASTA for downstream compatability with bowtie (alignment software)
+gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
 
-    cutadapt \
-        -j "$SLURM_CPUS_PER_TASK" \
-        -a TGGAATTCTCGGGTGCCAAGG \
-        -m "$MIN_LENGTH" \
-        -M "$MAX_LENGTH" \
-        -o "${OUTDIR_CUTADAPT}/${SAMPLE_NAME}_trimmed.fastq.gz" \
-        "$sample"
+# Completion message
+echo "$(timestamp)" "==> Finished downloading Homo sapiens genome from Ensembl" >> "$LOG"
+
+
+
+
+
+###==== miRNA ====###
+
+# Define the types of miRNA to be downloaded from miRBase
+MIRNA_LIST=("mature" "hairpin")
+
+# Download and clean miRNA reference files for 'mature' and 'hairpin'
+for mirna_form in "${MIRNA_LIST[@]}"; do
+
+    # Ensure output directory exists; if not, creates it
+    mkdir -p "${OUTDIR_MIRNA}/${mirna_form}"
+
+    # Navigate to reference directory
+    cd "${OUTDIR_MIRNA}/${mirna_form}"
+
+    # Initiation message
+    echo "$(timestamp)" "==> Downloading $mirna_form miRNA sequences (all species) from miRBase" >> "$LOG"
+
+    # Download FASTA reference file (not zipped)
+    wget https://www.mirbase.org/download/CURRENT/${mirna_form}.fa
+
+    # Extract Homo sapiens (hsa) miRNA sequences
+    awk '/^>/ {keep = ($0 ~ /hsa/)} keep' ${mirna_form}.fa > ${mirna_form}_hsa_inc_whitespace.fa
+
+    # Remove white-space from FASTA file for downstream compatbility with bowtie (alignment software)
+    remove_white_space_in_id.pl ${mirna_form}_hsa_inc_whitespace.fa > ${mirna_form}_hsa_excl_whitespace.fa
+
+    # Completion message
+    echo "$(timestamp)" "==> Finished downloading $mirna_form miRNA sequences (all species) from miRBase" >> "$LOG"
 
 done
 
-# Completion message
-echo "$(timestamp)" "==> cutadapt Finished" >> "$LOG"
 
 
 

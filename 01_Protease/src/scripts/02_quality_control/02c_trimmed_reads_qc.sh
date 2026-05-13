@@ -179,7 +179,7 @@ echo "==> Setting input files" >> "$LOG"
 # All FASTQ files containing the NGS sequencing output as array
 TRIMMED_READS=("${PROJECT_ROOT}"/results/methods_sections/02_quality_control/02b_trimming/cutadapt/*.fastq.gz) 
 echo "Input file(s):" >> "$LOG"
-echo "${TRIMMED_READS[@]}" >> $LOG
+echo "${TRIMMED_READS[@]}" >> "$LOG"
 
 # Completion message
 echo "==> Setting input files: Finished" >> "$LOG"

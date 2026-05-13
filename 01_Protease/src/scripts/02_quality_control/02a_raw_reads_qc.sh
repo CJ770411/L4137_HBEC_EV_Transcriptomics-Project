@@ -179,7 +179,7 @@ echo "==> Setting input files" >> "$LOG"
 # All FASTQ files containing the NGS sequencing output as array
 RAW_READS=("${PROJECT_ROOT}"/data/raw/*.fastq.gz)
 echo "Input file(s):" >> "$LOG"
-echo "${RAW_READS[@]}" >> $LOG
+echo "${RAW_READS[@]}" >> "$LOG"
 
 # Completion message
 echo "==> Setting input files: Finished" >> "$LOG"

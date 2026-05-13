@@ -42,8 +42,8 @@
 #SBATCH --mem=16G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
 #SBATCH --job-name=<myjob>                             # Name assigned to job allocation
-#SBATCH --output=../../logs/[]/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/[]/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --output=../../logs/[]/[]/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/[]/[]/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -63,7 +63,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=../../logs/[]
+LOG_DIR=../../logs/[]/[]
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -176,7 +176,7 @@ echo "==> Setting input files" >> "$LOG"
 # All FASTQ files containing the NGS sequencing output
 RAW_READS=${PROJECT_ROOT}/data/raw_data/*fastq.gz
 echo "Input file(s):" >> "$LOG"
-echo "${RAW_READS[@]}" >> $LOG
+echo "${RAW_READS[@]}" >> "$LOG"
 
 # Completion message
 echo "==> Setting input files: Finished" >> "$LOG"
@@ -215,8 +215,8 @@ echo "==> Setting output files: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting output directories" >> "$LOG"
 
-DIR1='[]'
-DIR2='[]'
+DIR1="[]"
+DIR2="[]"
 
 # Combine directories into array for simultaenous creation later
 DIR_LIST=("$DIR1" "$DIR2")
