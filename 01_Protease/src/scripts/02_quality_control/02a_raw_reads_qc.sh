@@ -65,7 +65,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=../../logs/02_quality_control/02a_raw_reads_qc
+LOG_DIR=$(realpath "../../logs/02_quality_control/02a_raw_reads_qc")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -145,7 +145,7 @@ else
     exit 1
 fi
 conda activate "$CONDA_ENV"
-echo "Conda Environemnt: " "$CONDA_ENV" >> "$LOG"
+echo "Conda Envrionment: " "$CONDA_ENV" >> "$LOG"
 
 # Completion message
 echo "==> Setting up environment: Finished" >> "$LOG"

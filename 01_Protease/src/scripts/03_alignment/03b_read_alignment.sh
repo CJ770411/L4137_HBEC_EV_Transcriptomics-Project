@@ -4,7 +4,7 @@
 #==============================================================================#
 # Script Name: 03b_read_alignment.sh
 #
-# Last updated: 13/05/2026 (dd/mm/yyyy)
+# Last updated: 14/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
 #   Align reads to the Homo sapiens reference genome.
@@ -39,8 +39,8 @@
 #SBATCH --partition=defq                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
 #SBATCH --nodes=1                                      # Number of nodes
 #SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=4                              # Number of cores
-#SBATCH --mem=16G                                      # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --cpus-per-task=16                              # Number of cores
+#SBATCH --mem=32G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
 #SBATCH --job-name=03b_read_alignment                             # Name assigned to job allocation
 #SBATCH --output=../../logs/03_alignment/03b_read_alignment/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
@@ -64,7 +64,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=../../logs/03_alignment/03b_read_alignment
+LOG_DIR=$(realpath "../../logs/03_alignment/03b_read_alignment")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -143,7 +143,7 @@ else
     exit 1
 fi
 conda activate "$CONDA_ENV"
-echo "Conda Environemnt:" "$CONDA_ENV" >> "$LOG"
+echo "Conda Envrionment:" "$CONDA_ENV" >> "$LOG"
 
 # Completion message
 echo "==> Setting up environment: Finished" >> "$LOG"
@@ -176,6 +176,12 @@ echo "==> Setting input files" >> "$LOG"
 
 # Reference genome FASTA file
 REF_GENOME="${PROJECT_ROOT}/data/reference/GRCh38.p14/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+
+# Mature miRNA FASTA file (miRBase)
+MAT_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/mature/mature_hsa_excl_whitespace.fa"
+
+# Hairpin miRNA FASTA file (miRBase)
+HAIR_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/hairpin/hairpin_hsa_excl_whitespace.fa"
 
 # All FASTQ files containing the trimmed NGS sequencing output
 TRIMMED_READS=(${PROJECT_ROOT}/results/methods_sections/02_quality_control/02b_trimming/cutadapt/*fastq.gz)
@@ -211,13 +217,7 @@ echo "==> Setting input directories: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting output files" >> "$LOG"
 
-# Directory for Homo sapiens reference genome index files
-INDEX_DIR="${PROJECT_ROOT}/data/reference/GRCh38.p14/index"
-
-# Combine directories into array for simultaenous creation later
-DIR_LIST=("$INDEX_DIR")
-echo "Output directories required:" >> "$LOG"
-echo "${DIR_LIST[@]}" >> $LOG
+# [] sam, bam, sorted bam
 
 # Completion message
 echo "==> Setting output files: Finished" >> "$LOG"
@@ -228,11 +228,21 @@ echo "==> Setting output files: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting output directories" >> "$LOG"
 
+# Directories for reference bowtie index files 
+#   1. Homo sapiens reference genome
+GENOME_INDEX_DIR="${PROJECT_ROOT}/data/reference/GRCh38.p14" 
+
+#   2. Mature miRNA
+MAT_MIRNA_INDEX_DIR="${PROJECT_ROOT}/data/reference/miRNA/mature" 
+
+#   3. Hairpin miRNA
+HAIR_MIRNA_INDEX_DIR="${PROJECT_ROOT}/data/reference/miRNA/hairpin" 
+
 # Directory for all output quality reports
 OUTDIR_BOWTIE="${PROJECT_ROOT}/results/methods_sections/03_alignment/03b_read_alignment/bowtie/GRCh38_p14"
 
 # Combine directories into array for simultaenous creation later
-DIR_LIST=("$OUTDIR_BOWTIE")
+DIR_LIST=("$OUTDIR_BOWTIE" "$GENOME_INDEX_DIR" "$MAT_MIRNA_INDEX_DIR" "$HAIR_MIRNA_INDEX_DIR")
 echo "Output directories required:" >> "$LOG"
 echo "${DIR_LIST[@]}" >> $LOG
 
@@ -293,41 +303,65 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 echo "$(timestamp)" "==> Initiating bowtie" >> "$LOG"
 
 # Build bowtie index
+#   1. Homo sapiens reference genome
 #   Index directory prefix = "GRCh38_p14"
-bowtie-build "$REF_GENOME" "$INDEX_DIR"
+bowtie-build "$REF_GENOME" "$GENOME_INDEX_DIR/GRCh38_genome"
 
-# Align reads to Homo sapiens reference genome
-for sample in "${TRIMMED_READS[@]}"; do
+echo "$(timestamp)" "==> Created reference genome index" >> "$LOG"
 
-    SAMPLE_NAME=$(basename "$sample" .fastq.gz)
+#   2. Mature miRNA
+#   Index directory prefix = "mature_hsa_mirbase"
+bowtie-build "$MAT_MIRNA" "$MAT_MIRNA_INDEX_DIR/mature_hsa_mirbase"
 
-    bowtie \
-        -a \
-        --best \
-        --strata \
-        -v 2 \
-        --nofw \
-        -x "$INDEX_DIR" \
-        -p $SLURM_CPUS_PER_TASK \
-        -q "$sample" \
-        -S "$OUTDIR_BOWTIE/${SAMPLE_NAME}.sam"
+echo "$(timestamp)" "==> Created mature miRNA index" >> "$LOG"
 
-done
+#   3. Hairpin miRNA
+#   Index directory prefix = "hairpin_hsa_mirbase"
+bowtie-build "$HAIR_MIRNA" "$HAIR_MIRNA_INDEX_DIR/hairpin_hsa_mirbase"
 
-# [] Example commands
-bowtie -v 1 -m 1 --best --strata --norc -l 20 \
--x ~/Genome_Index/mirbase_bowtie_index/mirbase_hsa \
--p \
--q ~/miRNA/trimmed/SRR1759248/SRR1759248_trimmed.fq.gz \
--S ~/miRNA/aligned/SRR1759248/SRR1759248_trimmed.sam
+echo "$(timestamp)" "==> Created hairpin miRNA index" >> "$LOG"
 
-bowtie -v 0 -a --best --strata reference_index trimmed_reads.fastq > aligned_reads.sam
 
-bowtie -v 2 -k 1 --best --strata \
-  grch38_index \
-  sample.fastq \
-  sample_genome_mapped.bwt
+# # Align reads to Homo sapiens reference genome
+# for sample in "${TRIMMED_READS[@]}"; do
 
+#     # Extract sample name
+#     SAMPLE_NAME=$(basename "$sample" .fastq.gz)
+
+# # Perform alignment
+#     bowtie \
+#         -a \
+#         --best \
+#         --strata \
+#         -v 2 \
+#         --norc \
+#         -x "$GENOME_INDEX_DIR" \
+#         -p $SLURM_CPUS_PER_TASK \
+#         -q "$sample" \
+#         -S "$OUTDIR_BOWTIE/${SAMPLE_NAME}.sam"
+
+# # Alignment statistics prep: convert SAM to BAM, sort and index
+
+#     # Convert file
+#     samtools view -bS "$OUTDIR_BOWTIE/${SAMPLE_NAME}.sam" > "$OUTDIR_BOWTIE/${SAMPLE_NAME}.bam"
+
+#     # Sort
+#     samtools sort -o "$OUTDIR_BOWTIE/${SAMPLE_NAME}_sorted.bam" \
+#     "$OUTDIR_BOWTIE/${SAMPLE_NAME}.bam" 
+
+#     # Index
+#     samtools index "$OUTDIR_BOWTIE/${SAMPLE_NAME}_sorted.bam"
+
+
+# # Calculate alignment statistics
+
+#     # Flagstats
+#     samtools flagstat "$OUTDIR_BOWTIE/${SAMPLE_NAME}_sorted.bam" > "$OUTDIR_BOWTIE/${SAMPLE_NAME}_flagstat.txt"
+
+#     # Idxstats
+#     samtools idxstats "$OUTDIR_BOWTIE/${SAMPLE_NAME}_sorted.bam" > "$OUTDIR_BOWTIE/${SAMPLE_NAME}_idxstats.txt"
+
+# done
 
 
 # Completion message

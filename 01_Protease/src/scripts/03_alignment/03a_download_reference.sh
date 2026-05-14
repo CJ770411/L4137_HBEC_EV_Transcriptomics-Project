@@ -45,8 +45,8 @@
 #SBATCH --nodes=1                                      # Number of nodes
 #SBATCH --ntasks=1                                     # Number of tasks 
 #SBATCH --cpus-per-task=1                              # Number of cores
-#SBATCH --mem=2G                                       # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=00:05:00                                # Run time limit (hh:mm:ss)
+#SBATCH --mem=8G                                       # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
 #SBATCH --job-name=03a_download_references                             # Name assigned to job allocation
 #SBATCH --output=../../logs/03_alignment/03a_download_references/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 #SBATCH --error=../../logs/03_alignment/03a_download_references/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
@@ -69,7 +69,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=../../logs/03_alignment/03a_download_references
+LOG_DIR=$(realpath "../../logs/03_alignment/03a_download_references")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -134,7 +134,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease_bowtie"
+CONDA_ENV="L4137_01_Protease_mirdeep2"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -322,7 +322,7 @@ for mirna_form in "${MIRNA_LIST[@]}"; do
     echo "$(timestamp)" "==> Downloading $mirna_form miRNA sequences (all species) from miRBase" >> "$LOG"
 
     # Download FASTA reference file (not zipped)
-    wget https://www.mirbase.org/download/CURRENT/${mirna_form}.fa
+    wget https://www.mirbase.org/download/${mirna_form}.fa
 
     # Extract Homo sapiens (hsa) miRNA sequences
     awk '/^>/ {keep = ($0 ~ /hsa/)} keep' ${mirna_form}.fa > ${mirna_form}_hsa_inc_whitespace.fa

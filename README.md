@@ -14,19 +14,19 @@ The project is split into two parts (to be performed sequentially):
 ### File Locations
 
 #### 01_Protease
-**Lab notebook:**
+[**Lab notebook:**](/01_Protease/docs/notebooks/worklog/project_notes.ipynb)
 - This document examines and discusses data, results and other relevant information.
 
 `01_Protease/docs/notebooks/worklog/project_notes.ipynb`
 
-**Lab worklog:**
+[**Lab worklog:**](/01_Protease/docs/notebooks/worklog/project_worklog.ipynb)
 - This document tracks the scripts, inputs and outputs at each stage of the analysis pipeline. 
 - It contains justifications for the software used.
 - All software/scripts executed will be detailed in this log, even if it is not used in the final analysis.
 
 `01_Protease/docs/notebooks/worklog/project_worklog.ipynb`
 
-**Investigations notebook:**
+[**Investigations notebook:**](/01_Protease/docs/notebooks/investigations/investigations.ipynb)
 - This document includes all investigations performed during the development of the analysis pipeline.
 - An investigation is launched when troubleshooting is required e.g. different permutations of an individual script.
 - The outputs of an investigation are all contained within one folder with a unique name: i_DDMMYY_01 (where 01 is replaced with 02, 03 etc. if multiple investigations launched on the same day).
@@ -35,6 +35,6 @@ The project is split into two parts (to be performed sequentially):
 `01_Protease/docs/notebooks/worklog/investigations.ipynb`
 
 
-**Scripts:**
+[**Scripts:**](/01_Protease/src/scripts/)
 
 `01_Protease/src/scripts`

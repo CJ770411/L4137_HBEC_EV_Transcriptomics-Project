@@ -2,20 +2,19 @@
 
 
 #==============================================================================#
-# Script Name: 02b_trimming.sh
+# Script Name: 03c_alignment_and_quantification.sh
 #
-# Last updated: 11/05/2026 (dd/mm/yyyy)
+# Last updated: 14/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   - Isolate miRNA reads
-#   - Remove adapter contamination (PCR by-product)
+#   []
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch 02b_trimming.sh
+#     sbatch 03c_alignment_and_quantification.sh
 #
 # Software:
-#   cutadapt v5.2
+#   miRDeep2
 #
 # VERSION: 1.0
 #
@@ -36,15 +35,15 @@
 #   SLURM Submission: Defines the SLRUM parameters required to execute
 #                     all steps of this script
 
-#SBATCH --partition=defq                               # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
+#SBATCH --partition=defq                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
 #SBATCH --nodes=1                                      # Number of nodes
 #SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=16                             # Number of cores
+#SBATCH --cpus-per-task=4                              # Number of cores
 #SBATCH --mem=32G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=02b_trimming                             # Name assigned to job allocation
-#SBATCH --output=../../logs/02_quality_control/02b_trimming/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/02_quality_control/02b_trimming/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --job-name=03c_alignment_and_quantification                             # Name assigned to job allocation
+#SBATCH --output=../../logs/03_alignment/03c_alignment_and_quantification/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/03_alignment/03c_alignment_and_quantification/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -64,7 +63,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/02_quality_control/02b_trimming")
+LOG_DIR=$(realpath "../../logs/03_alignment/03c_alignment_and_quantification")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -129,7 +128,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease_cutadapt"
+CONDA_ENV="L4137_01_Protease_mirdeep2"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -174,10 +173,10 @@ timestamp() {
 # Initiation message
 echo "==> Setting input files" >> "$LOG"
 
-# All FASTQ files containing the NGS sequencing output
-RAW_READS=(${PROJECT_ROOT}/data/raw/*fastq.gz)
+# All FASTQ files containing the NGS sequencing output as array
+TRIMMED_READS=("${PROJECT_ROOT}"/results/methods_sections/02_quality_control/02b_trimming/cutadapt/*.fastq.gz) 
 echo "Input file(s):" >> "$LOG"
-echo "${RAW_READS[@]}" >> "$LOG"
+echo "${TRIMMED_READS[@]}" >> "$LOG"
 
 # Completion message
 echo "==> Setting input files: Finished" >> "$LOG"
@@ -187,8 +186,9 @@ echo "==> Setting input files: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting input directories" >> "$LOG"
 
-# No input directories required
-echo "No input directories required" >> "$LOG"
+# Bowtie index directories
+#   1. Homo sapiens reference genome
+GENOME_INDEX_DIR="${PROJECT_ROOT}/data/reference/GRCh38.p14/GRCh38_genome" 
 
 # Completion message
 echo "==> Setting input directories: Finished" >> "$LOG"
@@ -201,6 +201,23 @@ echo "==> Setting input directories: Finished" >> "$LOG"
 #   Outputs: Contains all user-defined output files 
 #            and directories called within this script
 
+###==== Directories ====###
+# Initiation message
+echo "==> Setting output directories" >> "$LOG"
+
+# Outputs from alignment (mapper.pl)
+OUTDIR_MAP="${PROJECT_ROOT}/results/methods_sections/03_alignment/03c_alignment_and_quantification/mapper"
+
+# Combine directories into array for simultaenous creation later
+DIR_LIST=("$OUTDIR_MAP")
+echo "Output directories required:" >> "$LOG"
+echo "${DIR_LIST[@]}" >> $LOG
+
+# Completion message
+echo "==> Setting output directories: Finished" >> "$LOG"
+
+
+
 ###==== Files ====###
 # Initiation message
 echo "==> Setting output files" >> "$LOG"
@@ -211,22 +228,6 @@ echo "No user-defined output files required" >> "$LOG"
 # Completion message
 echo "==> Setting output files: Finished" >> "$LOG"
 
-
-###==== Directories ====###
-# Initiation message
-echo "==> Setting output directories" >> "$LOG"
-
-# Directory for all output quality reports
-OUTDIR_CUTADAPT="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02b_trimming/cutadapt"
-
-# Combine directories into array for simultaenous creation later
-DIR_LIST=("$OUTDIR_CUTADAPT")
-echo "Output directories required:" >> "$LOG"
-echo "${DIR_LIST[@]}" >> $LOG
-
-
-# Completion message
-echo "==> Setting output directories: Finished" >> "$LOG"
 
 
 #==========================#
@@ -266,14 +267,8 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 echo "==> Setting parameters" >> "$LOG"
 
 
-# Quality filters:
-MIN_LENGTH=18
-MAX_LENGTH=30
-
-echo "Quality Filters:" >> "$LOG" 
-echo "MIN_LENGTH=$MIN_LENGTH" >> "$LOG" 
-echo "MAX_LENGTH=$MAX_LENGTH" >> "$LOG" 
-
+# No specific configuration necessary
+echo "No user-defined configuration necessary" >> "$LOG"
 
 # Completion message
 echo "==> Setting parameters: Finished" >> "$LOG"
@@ -286,25 +281,71 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 
 
 # Initiation message
-echo "$(timestamp)" "==> Initiating cutadapt" >> "$LOG"
+echo "$(timestamp)" "==> Initiating miRDeep2" >> "$LOG"
 
-# Run cutadapt to trim raw read data for each sample
-for sample in "${RAW_READS[@]}"; do
 
+
+
+# Align reads to Homo sapiens reference genome
+for sample in "${TRIMMED_READS[@]}"; do
+
+    # Extract sample name
     SAMPLE_NAME=$(basename "$sample" .fastq.gz)
 
-    cutadapt \
-        -j "$SLURM_CPUS_PER_TASK" \
-        -a TGGAATTCTCGGGTGCCAAGG \
-        -m "$MIN_LENGTH" \
-        -M "$MAX_LENGTH" \
-        -o "${OUTDIR_CUTADAPT}/${SAMPLE_NAME}_trimmed.fastq.gz" \
-        "$sample"
+    # Define temporary unzipped FASTQ file
+    TEMP_FASTQ="${OUTDIR_MAP}/${SAMPLE_NAME}.fastq"
+
+    # Create unzipped FASTQ file
+    gunzip -c "$sample" > "$TEMP_FASTQ"
+
+    # Execute mapping
+    mapper.pl \
+        "$TEMP_FASTQ" \
+        -g hsa \
+        -l 18 \
+        -n -h -e -i -j -m \
+        -k TGGAATTCTCGGGTGCCAAGG \
+        -s "$OUTDIR_MAP/${SAMPLE_NAME}_collapsed.fasta" \
+        -p "$GENOME_INDEX_DIR" \
+        -t "$OUTDIR_MAP/${SAMPLE_NAME}_vs_genome_GRCh38.arf" 
+
+    # Remove temporary FASTQ file
+    rm "$TEMP_FASTQ"
+
+done
+
+
+# Reference genome FASTA file
+REF_GENOME="${PROJECT_ROOT}/data/reference/GRCh38.p14/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+
+# Mature miRNA FASTA file (miRBase)
+MAT_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/mature/mature_hsa_excl_whitespace.fa"
+
+# Hairpin miRNA FASTA file (miRBase)
+HAIR_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/hairpin/hairpin_hsa_excl_whitespace.fa"
+
+
+# Align reads to Homo sapiens reference genome
+for collapsed in "$OUTDIR_MAP"/*_collapsed.fasta; do
+
+    # Extract sample name
+    SAMPLE_NAME=$(basename "$collapsed" _collapsed.fasta)
+
+    # Define mapped reads in miRDeep2 '.arf' format
+    MAPPED_READS=("$OUTDIR_MAP/${SAMPLE_NAME}_vs_genome_GRCh38.arf") 
+
+    miRDeep2.pl \
+        "$COLLAPSED_READS" \
+        "$REF_GENOME" \
+        "$MAPPED_READS" \
+        "$MAT_MIRNA" \
+        none \
+        "$HAIR_MIRNA" \
 
 done
 
 # Completion message
-echo "$(timestamp)" "==> cutadapt Finished" >> "$LOG"
+echo "$(timestamp)" "==> miRDeep2 Finished" >> "$LOG"
 
 
 
