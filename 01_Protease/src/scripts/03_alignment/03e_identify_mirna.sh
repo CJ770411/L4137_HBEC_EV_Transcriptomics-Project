@@ -2,22 +2,19 @@
 
 
 #==============================================================================#
-# Script Name: 02a_raw_reads_qc.sh
+# Script Name: 03e_identify_mirna.sh
 #
-# Last updated: 08/05/2026 (dd/mm/yyyy)
+# Last updated: 14/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   - Perform quality control (QC) testing of raw read FASTQ files.
-#   - Examine various quality metrics per sample.
-#   - Compile QC results for all samples into one report.
+#   []
 #
 # Usage:
-#     sbatch <PATH_TO_SCRIPT>/quality_control.sh
+#   Execute from script directory using:
+#     sbatch 03e_identify_mirna.sh
 #
 # Software:
-#   FastQC v0.12.1
-#   miRTrace v1.0.1
-#   MultiQC v1.34
+#   miRDeep2
 #
 # VERSION: 1.0
 #
@@ -38,15 +35,16 @@
 #   SLURM Submission: Defines the SLRUM parameters required to execute
 #                     all steps of this script
 
-#SBATCH --partition=defq                                                     # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
-#SBATCH --nodes=1                                                            # Number of nodes
-#SBATCH --ntasks=1                                                           # Number of tasks 
-#SBATCH --cpus-per-task=4                                                    # Number of cores
-#SBATCH --mem=32G                                                            # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=02:00:00                                                      # Run time limit (hh:mm:ss)
-#SBATCH --job-name=02a_raw_reads_qc                                       # Name assigned to job allocation
-#SBATCH --output=../../logs/02_quality_control/02a_raw_reads_qc/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/02_quality_control/02a_raw_reads_qc/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --partition=defq                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
+#SBATCH --nodes=1                                      # Number of nodes
+#SBATCH --ntasks=1                                     # Number of tasks 
+#SBATCH --cpus-per-task=4                              # Number of cores
+#SBATCH --mem=20G                                      # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=04:00:00                                # Run time limit (hh:mm:ss)
+#SBATCH --job-name=03e_identify_mirna                             # Name assigned to job allocation
+#SBATCH --output=../../logs/03_alignment/03e_identify_mirna/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/03_alignment/03e_identify_mirna/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --array=0-14 
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -58,6 +56,7 @@
 set -eo pipefail
 
 
+
 #==========================#
 # LOG HANDLING
 #==========================#
@@ -65,15 +64,14 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/02_quality_control/02a_raw_reads_qc")
+LOG_DIR=$(realpath "../../logs/03_alignment/03e_identify_mirna")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
 
 # Define unique log file
 #    File name: contains script execution-specific information and date executed
-LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}.log" 
-
+LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.log" 
 
 
 # Script initialisation message
@@ -124,7 +122,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease"
+CONDA_ENV="L4137_01_Protease_mirdeep2"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -138,7 +136,7 @@ else
     exit 1
 fi
 conda activate "$CONDA_ENV"
-echo "Conda Envrionment: " "$CONDA_ENV" >> "$LOG"
+echo "Conda Envrionment:" "$CONDA_ENV" >> "$LOG"
 
 # Completion message
 echo "==> Setting up environment: Finished" >> "$LOG"
@@ -165,33 +163,62 @@ timestamp() {
 #   Inputs: Contains all user-defined input files 
 #           and directories called within this script
 
-###==== Files ====###
-# Initiation message
-echo "==> Setting input files" >> "$LOG"
 
-# All FASTQ files containing the NGS sequencing output as array
-RAW_READS=("${PROJECT_ROOT}"/data/raw/*.fastq.gz)
-echo "Input file(s):" >> "$LOG"
-echo "${RAW_READS[@]}" >> "$LOG"
-
-# Completion message
-echo "==> Setting input files: Finished" >> "$LOG"
 
 ###==== Directories ====###
 
 # Initiation message
 echo "==> Setting input directories" >> "$LOG"
 
-# Parent directory of all QC reports for individual samples from:
-# 1. FastQC
-# 2. miRTrace
-INDIR_SAMPLE_REPORTS="${PROJECT_ROOT}"/results/methods_sections/02_quality_control/02a_raw_reads_qc
-echo "Input directory:" >> "$LOG"
-echo "${INDIR_SAMPLE_REPORTS}" >> $LOG
+# Directory containing reads mapped to the Homo sapiens genome (output from mapper.pl)
+INDIR_MAPPED_READS="${PROJECT_ROOT}/results/methods_sections/03_alignment/03d_map_reads/mapper"
+
 
 # Completion message
 echo "==> Setting input directories: Finished" >> "$LOG"
 
+
+
+
+###==== Files ====###
+# Initiation message
+echo "==> Setting input files" >> "$LOG"
+echo "Input file(s):" >> "$LOG"
+
+
+
+# Load collapsed read files (outoput from mapper.pl) into an array for parallel analysis
+mapfile -t COLLAPSED_FILES < <(find "$INDIR_MAPPED_READS" -name "*_collapsed.fasta" | sort)
+
+# Identify sample based on SLURM_ARRAY_TASK_ID
+SAMPLE_FILE="${COLLAPSED_FILES[$SLURM_ARRAY_TASK_ID]}"
+echo "$(timestamp)" "==> Sample file: "$SAMPLE_FILE >> "$LOG"
+
+# Extract sample name
+SAMPLE_NAME=$(basename "$SAMPLE_FILE" _collapsed.fasta)
+echo "$(timestamp)" "==> Sample name: "$SAMPLE_NAME >> "$LOG"
+
+# Define mapped read file (outoput from mapper.pl)
+MAPPED_READS="$INDIR_MAPPED_READS/${SAMPLE_NAME}_vs_genome_GRCh38.arf"
+echo "$(timestamp)" "==> Mapped reads: "$MAPPED_READS >> "$LOG"
+
+# Homo sapiens reference genome (Ensembl)
+REF_GENOME="${PROJECT_ROOT}/data/reference/GRCh38.p14/Homo_sapiens.GRCh38.dna.primary_assembly_excl_whitespace.fa"
+echo "$(timestamp)" "==> Ref genome: "$REF_GENOME >> "$LOG"
+
+# Mature miRNA FASTA file (miRBase)
+MAT_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/mature/mature_hsa_excl_whitespace.fa"
+echo "$(timestamp)" "==> Mature miRNA: "$MAT_MIRNA >> "$LOG"
+
+# Hairpin miRNA FASTA file (miRBase)
+HAIR_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/hairpin/hairpin_hsa_excl_whitespace.fa"
+echo "$(timestamp)" "==> Hairpin miRNA: "$HAIR_MIRNA >> "$LOG"
+
+
+
+
+# Completion message
+echo "==> Setting input files: Finished" >> "$LOG"
 
 
 #==========================#
@@ -199,6 +226,25 @@ echo "==> Setting input directories: Finished" >> "$LOG"
 #==========================#
 #   Outputs: Contains all user-defined output files 
 #            and directories called within this script
+
+###==== Directories ====###
+# Initiation message
+echo "==> Setting output directories" >> "$LOG"
+
+# Directory for miRDeep2.pl outputs
+#       Distinct directory for each sample analysed
+OUTDIR_SAMPLE="${PROJECT_ROOT}/results/methods_sections/03_alignment/03e_identify_mirna/${SAMPLE_NAME}"
+
+
+# Combine directories into array for simultaenous creation later
+DIR_LIST=("$OUTDIR_SAMPLE")
+echo "Output directories required:" >> "$LOG"
+echo "${DIR_LIST[@]}" >> $LOG
+
+# Completion message
+echo "==> Setting output directories: Finished" >> "$LOG"
+
+
 
 ###==== Files ====###
 # Initiation message
@@ -210,24 +256,6 @@ echo "No user-defined output files required" >> "$LOG"
 # Completion message
 echo "==> Setting output files: Finished" >> "$LOG"
 
-
-###==== Directories ====###
-# Initiation message
-echo "==> Setting output directories" >> "$LOG"
-
-# Directory for all output quality reports
-OUTDIR_FASTQC="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02a_raw_reads_qc/fastqc"
-OUTDIR_MIRTRACE_TRACE="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02a_raw_reads_qc/mirtrace/trace"
-OUTDIR_MIRTRACE_QC="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02a_raw_reads_qc/mirtrace/qc"
-OUTDIR_MULTIQC="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02a_raw_reads_qc/multiqc"
-
-# Combine directories into array for simultaenous creation later
-DIR_LIST=("$OUTDIR_FASTQC" "$OUTDIR_MIRTRACE_TRACE" "$OUTDIR_MIRTRACE_QC" "$OUTDIR_MULTIQC")
-echo "Output directories required:" >> "$LOG"
-echo "${DIR_LIST[@]}" >> $LOG
-
-# Completion message
-echo "==> Setting output directories: Finished" >> "$LOG"
 
 
 #==========================#
@@ -246,10 +274,10 @@ echo "==> Verifying/creating output directories" >> "$LOG"
 #   3) Prints completion message defining action taken
 for directory in "${DIR_LIST[@]}"; do
     if [ -d "${directory}" ]; then
-        echo "Directory exists: " "${directory}" >> "$LOG"
+        echo "Directory exists:" "${directory}" >> "$LOG"
     else
         mkdir -p "${directory}"
-        echo "Directory created: " "${directory}" >> "$LOG"
+        echo "Directory created:" "${directory}" >> "$LOG"
     fi
 done
 
@@ -272,77 +300,36 @@ echo "No user-defined configuration necessary" >> "$LOG"
 # Completion message
 echo "==> Setting parameters: Finished" >> "$LOG"
 
+
 #==========================#
 # MAIN SCRIPT      
 #==========================#
 #   Main Script: Executes the main body of code which produces 
 #                the outputs of the script
 
-# Check if FASTQ files exist
-# Exit status 1 if files not found
-if [ ${#RAW_READS[@]} -eq 0 ]; then
-    echo "Error: No FASTQ files found in ${PROJECT_ROOT}/data/raw/"
-    echo "Execute 01_data_preparation then re-run this script"
-    exit 1
-fi
-
-###==== FastQC ====###
 
 # Initiation message
-echo "$(timestamp)" "==> Initiating FastQC" >> "$LOG"
+echo "$(timestamp)" "==> Initiating miRDeep2 for" "$SAMPLE_NAME" >> "$LOG"
 
 
-# Run FastQC to generate QC reports
-fastqc \
-"${RAW_READS[@]}" \
--o "$OUTDIR_FASTQC" \
--t $SLURM_CPUS_PER_TASK
+# Navigate to the unique sample output directory
+cd "$OUTDIR_SAMPLE"
+
+# Align reads to Homo sapiens reference genome
+miRDeep2.pl \
+"$SAMPLE_FILE" \
+"$REF_GENOME" \
+"$MAPPED_READS" \
+"$MAT_MIRNA" \
+none \
+"$HAIR_MIRNA" \
+-t Human 
+
+
+
 
 # Completion message
-echo "$(timestamp)" "==> FastQC Finished" >> "$LOG"
-
-
-
-###==== miRTrace ====###
-
-# Initiation message
-echo "$(timestamp)" "==> Initiating miRTrace" >> "$LOG"
-
-
-# Run miRTrace to generate trace QC reports
-mirtrace \
-trace \
--o "$OUTDIR_MIRTRACE_TRACE" \
--f \
--t $SLURM_CPUS_PER_TASK \
-"${RAW_READS[@]}" \
-
-# Run miRTrace to generate QC reports
-mirtrace \
-qc \
--s hsa \
--o "$OUTDIR_MIRTRACE_QC" \
--f \
--t $SLURM_CPUS_PER_TASK \
-"${RAW_READS[@]}" \
-
-# Completion message
-echo "$(timestamp)" "==> miRTrace Finished" >> "$LOG"
-
-
-###==== MultiQC ====###
-
-# Initiation message
-echo "$(timestamp)" "==> Initiating MultiQC" >> "$LOG"
-
-
-# Run MultiQC to merge all individual sample QC reports into one report
-multiqc \
--o "$OUTDIR_MULTIQC" \
-"$INDIR_SAMPLE_REPORTS"
-
-# Completion message
-echo "$(timestamp)" "==> MultiQC Finished" >> "$LOG"
+echo "$(timestamp)" "==> Finished miRDeep2 for" "$SAMPLE_NAME" >> "$LOG"
 
 
 

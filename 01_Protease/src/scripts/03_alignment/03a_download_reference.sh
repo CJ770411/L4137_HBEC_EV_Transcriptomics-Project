@@ -74,16 +74,9 @@ LOG_DIR=$(realpath "../../logs/03_alignment/03a_download_references")
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
 
-# Define log file
-LOG_ID=1 # Unique identifier
-LOG="${LOG_DIR}/${SLURM_JOB_NAME}_$(date '+%y-%m-%d')_log_${LOG_ID}.txt" # Includes script name and date
-
-# Set unique log file name
-# Loop to increment log ID identifier by 1 until unique ID found
-while [[ -f "$LOG" ]]; do
-    LOG_ID=$((LOG_ID + 1)) # Increase identifier by 1
-    LOG="${LOG_DIR}/${SLURM_JOB_NAME}_$(date '+%y-%m-%d')_log_${LOG_ID}.txt" # Save log file with unique identifier
-done 
+# Define unique log file
+#    File name: contains script execution-specific information and date executed
+LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}.log" 
 
 
 # Script initialisation message
@@ -294,7 +287,10 @@ echo "$(timestamp)" "==> Downloading Homo sapiens genome from Ensembl" >> "$LOG"
 # Download zipped FASTA reference file
 wget https://ftp.ensembl.org/pub/release-115/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
 
-# Unzip FASTA for downstream compatability with bowtie (alignment software)
+# Remove white-space from FASTA file for downstream compatbility with miRDeep2 (alignment software)
+remove_white_space_in_id.pl Homo_sapiens.GRCh38.dna.primary_assembly.fa > Homo_sapiens.GRCh38.dna.primary_assembly_excl_whitespace.fa
+
+# Unzip FASTA for downstream compatability with bowtie and miRDeep2 (alignment software)
 gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
 
 # Completion message
@@ -327,7 +323,7 @@ for mirna_form in "${MIRNA_LIST[@]}"; do
     # Extract Homo sapiens (hsa) miRNA sequences
     awk '/^>/ {keep = ($0 ~ /hsa/)} keep' ${mirna_form}.fa > ${mirna_form}_hsa_inc_whitespace.fa
 
-    # Remove white-space from FASTA file for downstream compatbility with bowtie (alignment software)
+    # Remove white-space from FASTA file for downstream compatbility with miRDeep2 (alignment software)
     remove_white_space_in_id.pl ${mirna_form}_hsa_inc_whitespace.fa > ${mirna_form}_hsa_excl_whitespace.fa
 
     # Completion message

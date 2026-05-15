@@ -38,9 +38,9 @@
 #SBATCH --partition=defq                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
 #SBATCH --nodes=1                                      # Number of nodes
 #SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=4                              # Number of cores
-#SBATCH --mem=32G                                      # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
+#SBATCH --cpus-per-task=32                              # Number of cores
+#SBATCH --mem=100G                                      # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=06:00:00                                # Run time limit (hh:mm:ss)
 #SBATCH --job-name=03c_alignment_and_quantification                             # Name assigned to job allocation
 #SBATCH --output=../../logs/03_alignment/03c_alignment_and_quantification/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 #SBATCH --error=../../logs/03_alignment/03c_alignment_and_quantification/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
@@ -68,17 +68,9 @@ LOG_DIR=$(realpath "../../logs/03_alignment/03c_alignment_and_quantification")
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
 
-# Define log file
-LOG_ID=1 # Unique identifier
-LOG="${LOG_DIR}/${SLURM_JOB_NAME}_$(date '+%y-%m-%d')_log_${LOG_ID}.txt" # Includes script name and date
-
-# Set unique log file name
-# Loop to increment log ID identifier by 1 until unique ID found
-while [[ -f "$LOG" ]]; do
-    LOG_ID=$((LOG_ID + 1)) # Increase identifier by 1
-    LOG="${LOG_DIR}/${SLURM_JOB_NAME}_$(date '+%y-%m-%d')_log_${LOG_ID}.txt" # Save log file with unique identifier
-done 
-
+# Define unique log file
+#    File name: contains script execution-specific information and date executed
+LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}.log" 
 
 # Script initialisation message
 echo "<------------------------------------------------------->" >> "$LOG"
@@ -316,7 +308,7 @@ done
 
 
 # Reference genome FASTA file
-REF_GENOME="${PROJECT_ROOT}/data/reference/GRCh38.p14/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+REF_GENOME="${PROJECT_ROOT}/data/reference/GRCh38.p14/Homo_sapiens.GRCh38.dna.primary_assembly_excl_whitespace.fa"
 
 # Mature miRNA FASTA file (miRBase)
 MAT_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/mature/mature_hsa_excl_whitespace.fa"
@@ -335,14 +327,15 @@ for collapsed in "$OUTDIR_MAP"/*_collapsed.fasta; do
     MAPPED_READS=("$OUTDIR_MAP/${SAMPLE_NAME}_vs_genome_GRCh38.arf") 
 
     miRDeep2.pl \
-        "$COLLAPSED_READS" \
+        "$collapsed" \
         "$REF_GENOME" \
         "$MAPPED_READS" \
         "$MAT_MIRNA" \
         none \
-        "$HAIR_MIRNA" \
+        "$HAIR_MIRNA" 
 
 done
+
 
 # Completion message
 echo "$(timestamp)" "==> miRDeep2 Finished" >> "$LOG"

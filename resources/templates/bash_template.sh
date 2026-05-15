@@ -68,17 +68,9 @@ LOG_DIR=$(realpath "../../logs/[]/[]")
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
 
-# Define log file
-LOG_ID=1 # Unique identifier
-LOG="${LOG_DIR}/${SLURM_JOB_NAME}_$(date '+%y-%m-%d')_log_${LOG_ID}.txt" # Includes script name and date
-
-# Set unique log file name
-# Loop to increment log ID identifier by 1 until unique ID found
-while [[ -f "$LOG" ]]; do
-    LOG_ID=$((LOG_ID + 1)) # Increase identifier by 1
-    LOG="${LOG_DIR}/${SLURM_JOB_NAME}_$(date '+%y-%m-%d')_log_${LOG_ID}.txt" # Save log file with unique identifier
-done 
-
+# Define unique log file
+#    File name: contains script execution-specific information and date executed
+LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.log" []remove array bit as needed
 
 # Script initialisation message
 echo "<------------------------------------------------------->" >> "$LOG"
