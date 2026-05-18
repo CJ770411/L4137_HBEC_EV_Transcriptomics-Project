@@ -161,17 +161,6 @@ timestamp() {
 #   Inputs: Contains all user-defined input files 
 #           and directories called within this script
 
-###==== Files ====###
-# Initiation message
-echo "==> Setting input files" >> "$LOG"
-
-# All FASTQ files containing the NGS sequencing output
-RAW_READS=${PROJECT_ROOT}/data/raw_data/*fastq.gz
-echo "Input file(s):" >> "$LOG"
-echo "${RAW_READS[@]}" >> "$LOG"
-
-# Completion message
-echo "==> Setting input files: Finished" >> "$LOG"
 
 ###==== Directories ====###
 
@@ -185,22 +174,25 @@ echo "No input directories required" >> "$LOG"
 echo "==> Setting input directories: Finished" >> "$LOG"
 
 
+###==== Files ====###
+# Initiation message
+echo "==> Setting input files" >> "$LOG"
+
+# All FASTQ files containing the NGS sequencing output
+RAW_READS=${PROJECT_ROOT}/data/raw_data/*fastq.gz
+echo "Input file(s):" >> "$LOG"
+echo "${RAW_READS[@]}" >> "$LOG"
+
+# Completion message
+echo "==> Setting input files: Finished" >> "$LOG"
+
+
 
 #==========================#
 # OUTPUTS      
 #==========================#
 #   Outputs: Contains all user-defined output files 
 #            and directories called within this script
-
-###==== Files ====###
-# Initiation message
-echo "==> Setting output files" >> "$LOG"
-
-# No user-defined output files required
-echo "No user-defined output files required" >> "$LOG"
-
-# Completion message
-echo "==> Setting output files: Finished" >> "$LOG"
 
 
 ###==== Directories ====###
@@ -217,6 +209,19 @@ echo "${DIR_LIST[@]}" >> $LOG
 
 # Completion message
 echo "==> Setting output directories: Finished" >> "$LOG"
+
+
+
+###==== Files ====###
+# Initiation message
+echo "==> Setting output files" >> "$LOG"
+
+# No user-defined output files required
+echo "No user-defined output files required" >> "$LOG"
+
+# Completion message
+echo "==> Setting output files: Finished" >> "$LOG"
+
 
 
 #==========================#

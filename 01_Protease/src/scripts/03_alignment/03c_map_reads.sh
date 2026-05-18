@@ -2,7 +2,7 @@
 
 
 #==============================================================================#
-# Script Name: 03d_map_reads.sh
+# Script Name: 03c_map_reads.sh
 #
 # Last updated: 14/05/2026 (dd/mm/yyyy)
 #
@@ -11,10 +11,10 @@
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch 03d_map_reads.sh
+#     sbatch 03c_map_reads.sh
 #
 # Software:
-#   miRDeep2
+#   miRDeep2 v2.0.1.3
 #
 # VERSION: 1.0
 #
@@ -41,10 +41,10 @@
 #SBATCH --cpus-per-task=4                              # Number of cores
 #SBATCH --mem=20G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=03d_map_reads                             # Name assigned to job allocation
-#SBATCH --output=../../logs/03_alignment/03d_map_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/03_alignment/03d_map_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --array=0-14 
+#SBATCH --job-name=03c_map_reads                             # Name assigned to job allocation
+#SBATCH --output=../../logs/03_alignment/03c_map_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/03_alignment/03c_map_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --array=0-14                                   # One job per sample (15 samples)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -64,7 +64,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/03_alignment/03d_map_reads")
+LOG_DIR=$(realpath "../../logs/03_alignment/03c_map_reads")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -220,7 +220,7 @@ echo "==> Setting input files: Finished" >> "$LOG"
 echo "==> Setting output directories" >> "$LOG"
 
 # Outputs from alignment (mapper.pl)
-OUTDIR_MAP="${PROJECT_ROOT}/results/methods_sections/03_alignment/03d_map_reads/mapper"
+OUTDIR_MAP="${PROJECT_ROOT}/results/methods_sections/03_alignment/03c_map_reads/mapper"
 
 # Combine directories into array for simultaenous creation later
 DIR_LIST=("$OUTDIR_MAP")

@@ -2,7 +2,7 @@
 
 
 #==============================================================================#
-# Script Name: 03e_identify_mirna.sh
+# Script Name: 03d_identify_mirna.sh
 #
 # Last updated: 14/05/2026 (dd/mm/yyyy)
 #
@@ -11,10 +11,10 @@
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch 03e_identify_mirna.sh
+#     sbatch 03d_identify_mirna.sh
 #
 # Software:
-#   miRDeep2
+#   miRDeep2 v2.0.1.3
 #
 # VERSION: 1.0
 #
@@ -41,10 +41,10 @@
 #SBATCH --cpus-per-task=4                              # Number of cores
 #SBATCH --mem=20G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=04:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=03e_identify_mirna                             # Name assigned to job allocation
-#SBATCH --output=../../logs/03_alignment/03e_identify_mirna/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/03_alignment/03e_identify_mirna/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --array=0-14 
+#SBATCH --job-name=03d_identify_mirna                             # Name assigned to job allocation
+#SBATCH --output=../../logs/03_alignment/03d_identify_mirna/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/03_alignment/03d_identify_mirna/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --array=0-14                                   # One job per sample (15 samples)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -64,7 +64,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/03_alignment/03e_identify_mirna")
+LOG_DIR=$(realpath "../../logs/03_alignment/03d_identify_mirna")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -171,7 +171,7 @@ timestamp() {
 echo "==> Setting input directories" >> "$LOG"
 
 # Directory containing reads mapped to the Homo sapiens genome (output from mapper.pl)
-INDIR_MAPPED_READS="${PROJECT_ROOT}/results/methods_sections/03_alignment/03d_map_reads/mapper"
+INDIR_MAPPED_READS="${PROJECT_ROOT}/results/methods_sections/03_alignment/03c_map_reads/mapper"
 
 
 # Completion message
@@ -190,29 +190,22 @@ echo "Input file(s):" >> "$LOG"
 # Load collapsed read files (outoput from mapper.pl) into an array for parallel analysis
 mapfile -t COLLAPSED_FILES < <(find "$INDIR_MAPPED_READS" -name "*_collapsed.fasta" | sort)
 
-# Identify sample based on SLURM_ARRAY_TASK_ID
-SAMPLE_FILE="${COLLAPSED_FILES[$SLURM_ARRAY_TASK_ID]}"
-echo "$(timestamp)" "==> Sample file: "$SAMPLE_FILE >> "$LOG"
-
-# Extract sample name
-SAMPLE_NAME=$(basename "$SAMPLE_FILE" _collapsed.fasta)
-echo "$(timestamp)" "==> Sample name: "$SAMPLE_NAME >> "$LOG"
 
 # Define mapped read file (outoput from mapper.pl)
 MAPPED_READS="$INDIR_MAPPED_READS/${SAMPLE_NAME}_vs_genome_GRCh38.arf"
-echo "$(timestamp)" "==> Mapped reads: "$MAPPED_READS >> "$LOG"
+echo  "==> Mapped reads: "$MAPPED_READS >> "$LOG"
 
 # Homo sapiens reference genome (Ensembl)
 REF_GENOME="${PROJECT_ROOT}/data/reference/GRCh38.p14/Homo_sapiens.GRCh38.dna.primary_assembly_excl_whitespace.fa"
-echo "$(timestamp)" "==> Ref genome: "$REF_GENOME >> "$LOG"
+echo  "==> Ref genome: "$REF_GENOME >> "$LOG"
 
 # Mature miRNA FASTA file (miRBase)
 MAT_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/mature/mature_hsa_excl_whitespace.fa"
-echo "$(timestamp)" "==> Mature miRNA: "$MAT_MIRNA >> "$LOG"
+echo  "==> Mature miRNA: "$MAT_MIRNA >> "$LOG"
 
 # Hairpin miRNA FASTA file (miRBase)
 HAIR_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/hairpin/hairpin_hsa_excl_whitespace.fa"
-echo "$(timestamp)" "==> Hairpin miRNA: "$HAIR_MIRNA >> "$LOG"
+echo  "==> Hairpin miRNA: "$HAIR_MIRNA >> "$LOG"
 
 
 
@@ -233,7 +226,7 @@ echo "==> Setting output directories" >> "$LOG"
 
 # Directory for miRDeep2.pl outputs
 #       Distinct directory for each sample analysed
-OUTDIR_SAMPLE="${PROJECT_ROOT}/results/methods_sections/03_alignment/03e_identify_mirna/${SAMPLE_NAME}"
+OUTDIR_SAMPLE="${PROJECT_ROOT}/results/methods_sections/03_alignment/03d_identify_mirna/${SAMPLE_NAME}"
 
 
 # Combine directories into array for simultaenous creation later
@@ -311,6 +304,13 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 # Initiation message
 echo "$(timestamp)" "==> Initiating miRDeep2 for" "$SAMPLE_NAME" >> "$LOG"
 
+# Identify sample based on SLURM_ARRAY_TASK_ID
+SAMPLE_FILE="${COLLAPSED_FILES[$SLURM_ARRAY_TASK_ID]}"
+echo  "==> Sample file: "$SAMPLE_FILE >> "$LOG"
+
+# Extract sample name
+SAMPLE_NAME=$(basename "$SAMPLE_FILE" _collapsed.fasta)
+echo  "==> Sample name: "$SAMPLE_NAME >> "$LOG"
 
 # Navigate to the unique sample output directory
 cd "$OUTDIR_SAMPLE"
