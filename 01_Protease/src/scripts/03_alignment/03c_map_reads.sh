@@ -318,6 +318,8 @@ mapper.pl \
 -p "$INDIR_GENOME_INDEX" \
 -t "$MAPPED_READS" 
 
+# [] -o is threads
+
 # Remove temporary FASTQ file
 rm "$TEMP_TRIMMED_FASTQ"
 

@@ -7,7 +7,7 @@ library(edgeR)
 library(readr)
 library(dplyr)
 
-# Read in count matrix from '04b_DE_analysis_edgeR.R'
+# Read in count matrix from '04a_create_count_matrix'
 count_matrix <- read_tsv("/Users/christopherjanschke/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/methods_sections/04_DE_analysis/04a_create_count_matrix/edgeR_count_matrix.txt")
 
 # Convert count matrix to data frame

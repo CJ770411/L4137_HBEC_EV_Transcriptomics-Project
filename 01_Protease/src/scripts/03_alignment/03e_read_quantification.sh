@@ -317,6 +317,8 @@ quantifier.pl \
 -r "$INFILE_COLLAPSED_READS" \
 -t Human
 
+# [] -T for threads
+
 # Identify mature miRNA count file
 #       Note: "all_samples" is default naming convention from miRDeep2.
 #              The file only contains data from one sample.
