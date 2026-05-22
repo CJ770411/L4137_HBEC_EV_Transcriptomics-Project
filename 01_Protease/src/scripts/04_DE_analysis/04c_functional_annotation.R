@@ -43,5 +43,6 @@ ekegg <- enrichKEGG(genes_entrez)
 # Visualise KEGG enrichment analysis results
 dotplot(ekegg)
 
+# [split gene list by upregulated and downregulated mirnas]
 # [Outstanding: miRNA interaction network w/ Cytoscope]
 
