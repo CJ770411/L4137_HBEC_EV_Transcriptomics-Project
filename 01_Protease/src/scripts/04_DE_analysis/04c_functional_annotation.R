@@ -44,5 +44,7 @@ ekegg <- enrichKEGG(genes_entrez)
 dotplot(ekegg)
 
 # [split gene list by upregulated and downregulated mirnas]
-# [Outstanding: miRNA interaction network w/ Cytoscope]
+# [Outstanding: 
+#              -  enrichPathway()]
+#              -  miRNA interaction network w/ Cytoscope]
 
