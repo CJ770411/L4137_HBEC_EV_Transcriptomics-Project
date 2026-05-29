@@ -56,12 +56,13 @@ dotplot(ekegg_up)
 dotplot(ekegg_down)
 
 # Test code (not part of main script)
-length(genes_entrez_up)
-length(genes_entrez_down)
-length(target_results_up@data$target_entrez)
-dim(target_results_up@data)
-head(target_results_up@data)
-dose24_data$Symbol
+target_results_up@data %>% filter(support_type != "Functional MTI (Weak)")
+
+target_results_up@data %>%
+  count(support_type)
+
+
+
 
 # [split gene list by upregulated and downregulated mirnas]
 # [Outstanding: 
