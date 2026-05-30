@@ -58,9 +58,17 @@ dotplot(ekegg_down)
 # Test code (not part of main script)
 target_results_up@data %>% filter(support_type != "Functional MTI (Weak)")
 
-target_results_up@data %>%
-  count(support_type)
+length(genes_symbol_up)
 
+# This code reduces target gene set from 15362 to 763 genes
+target_results_up_filtered <- target_results_up@data %>%
+  dplyr::filter(
+    grepl(
+      "luciferase|western blot|qpcr",
+      experiment,
+      ignore.case = TRUE
+    )
+  )
 
 
 
