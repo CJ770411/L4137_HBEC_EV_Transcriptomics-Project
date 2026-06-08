@@ -316,7 +316,7 @@ trace \
 -o "$OUTDIR_MIRTRACE_TRACE" \
 -f \
 -t $SLURM_CPUS_PER_TASK \
-"${TRIMMED_READS[@]}" \
+"${TRIMMED_READS[@]}" 
 
 # Run miRTrace to generate QC reports
 mirtrace \
@@ -325,7 +325,7 @@ qc \
 -o "$OUTDIR_MIRTRACE_QC" \
 -f \
 -t $SLURM_CPUS_PER_TASK \
-"${TRIMMED_READS[@]}" \
+"${TRIMMED_READS[@]}" 
 
 # Completion message
 echo "$(timestamp)" "==> miRTrace Finished" >> "$LOG"
