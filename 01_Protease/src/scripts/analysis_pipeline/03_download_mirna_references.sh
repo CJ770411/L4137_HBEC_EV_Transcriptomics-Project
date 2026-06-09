@@ -2,16 +2,21 @@
 
 
 #==============================================================================#
-# Script Name: 03c_map_reads.sh
+# Script Name: 03_download_mirna_references.sh
 #
-# Last updated: 14/05/2026 (dd/mm/yyyy)
+# Last updated: 13/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   []
+#   - Download reference files necessary to create bowtie index and perform alignment. 
+#     References to download:
+#       2. (miRBase) Mature miRNA sequences
+#       3. (miRBase) Hairpin miRNA sequences
+#   - Clean up raw reference files for compatability with downstream software.
+#   - Extract only Homo sapiens data from miRBase files.
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch 03c_map_reads.sh
+#     sbatch 03_download_mirna_references.sh
 #
 # Software:
 #   miRDeep2 v2.0.1.3
@@ -38,13 +43,12 @@
 #SBATCH --partition=defq                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
 #SBATCH --nodes=1                                      # Number of nodes
 #SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=4                              # Number of cores
-#SBATCH --mem=20G                                      # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=03c_map_reads                             # Name assigned to job allocation
-#SBATCH --output=../../logs/03_alignment/03c_map_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/03_alignment/03c_map_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --array=0-14                                   # One job per sample (15 samples)
+#SBATCH --cpus-per-task=1                              # Number of cores
+#SBATCH --mem=8G                                       # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
+#SBATCH --job-name=03_download_mirna_references                             # Name assigned to job allocation
+#SBATCH --output=../../logs/analysis_pipeline/run_01/03_download_mirna_references/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/analysis_pipeline/run_01/03_download_mirna_references/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -64,20 +68,20 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/03_alignment/03c_map_reads")
+LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_01/03_download_mirna_references")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
 
 # Define unique log file
 #    File name: contains script execution-specific information and date executed
-LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.log" 
+LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}.log" 
 
 
 # Script initialisation message
 echo "<------------------------------------------------------->" >> "$LOG"
 echo "Initialising script: $SLURM_JOB_NAME.sh" >> "$LOG"
-echo "Date initialised" "$(date)" >> "$LOG"
+echo "Date initialised:" "$(date)" >> "$LOG"
 
 
 #==========================#
@@ -93,15 +97,11 @@ echo "==> Setting up in-script navigation" >> "$LOG"
 PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../..")" 
 echo "Project Root: $PROJECT_ROOT" >> "$LOG"
 
-#   2. Extract script prefix for methods subsection
-SCRIPT_PREFIX="${SLURM_JOB_NAME%%[!0-9]*}"
-echo "Script Prefix: $SCRIPT_PREFIX" >> "$LOG"
-
-#   3. Define this script
-SCRIPT=${PROJECT_ROOT}/scripts/${SCRIPT_PREFIX}*/${SLURM_JOB_NAME}.sh
+#   2. Define this script
+SCRIPT=${PROJECT_ROOT}/scripts/analysis_pipeline/${SLURM_JOB_NAME}.sh
 echo "Script Name: $SLURM_JOB_NAME.sh" >> "$LOG"
 
-#   4. Ensure script is called from directory containing script
+#   3. Ensure script is called from directory containing script
 #      Exit status 1 if script not found
 if [ ! -f $SCRIPT ]; then
    echo "Error: script must be called from the directory containing $SLURM_JOB_NAME.sh" >&2
@@ -136,7 +136,7 @@ else
     exit 1
 fi
 conda activate "$CONDA_ENV"
-echo "Conda Envrionment:" "$CONDA_ENV" >> "$LOG"
+echo "Conda Environment: " "$CONDA_ENV" >> "$LOG"
 
 # Completion message
 echo "==> Setting up environment: Finished" >> "$LOG"
@@ -163,49 +163,26 @@ timestamp() {
 #   Inputs: Contains all user-defined input files 
 #           and directories called within this script
 
-###==== Directories ====###
-
-# Initiation message
-echo "==> Setting input files" >> "$LOG"
-echo "Input file(s):" >> "$LOG"
-
-# Homo sapiens reference genome bowtie index directory
-INDIR_GENOME_INDEX="${PROJECT_ROOT}/data/reference/GRCh38.p14/GRCh38_genome" 
-echo "$(timestamp)" "==> Directory containing Homo sapiens genome index files: "$INDIR_GENOME_INDEX >> "$LOG"
-
-# Trimmed reads directory
-INDIR_TRIMMED_READS="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02b_trimming/cutadapt"
-echo "$(timestamp)" "==> Directory containing trimmed reads: "$INDIR_TRIMMED_READS >> "$LOG"
-
-# Completion message
-echo "==> Setting input directories: Finished" >> "$LOG"
-
-
-
 ###==== Files ====###
 # Initiation message
 echo "==> Setting input files" >> "$LOG"
-echo "Input file(s):" >> "$LOG"
 
-
-
-# Load trimmed read files into an array for parallel analysis
-mapfile -t TRIMMED_READS < <(find "$INDIR_TRIMMED_READS" -name "*.fastq.gz" | sort)
-
-# Identify sample based on SLURM_ARRAY_TASK_ID
-SAMPLE_FILE="${TRIMMED_READS[$SLURM_ARRAY_TASK_ID]}"
-echo "$(timestamp)" "==> Sample file: "$SAMPLE_FILE >> "$LOG"
-
-# Extract sample name
-SAMPLE_NAME=$(basename "$SAMPLE_FILE" .fastq.gz)
-echo "$(timestamp)" "==> Sample name: "$SAMPLE_NAME >> "$LOG"
-
+# No input files required
+echo "No input files required" >> "$LOG"
 
 # Completion message
 echo "==> Setting input files: Finished" >> "$LOG"
 
+###==== Directories ====###
 
+# Initiation message
+echo "==> Setting input directories" >> "$LOG"
 
+# No input directories required
+echo "No input directories required" >> "$LOG"
+
+# Completion message
+echo "==> Setting input directories: Finished" >> "$LOG"
 
 
 
@@ -215,35 +192,31 @@ echo "==> Setting input files: Finished" >> "$LOG"
 #   Outputs: Contains all user-defined output files 
 #            and directories called within this script
 
+###==== Files ====###
+# Initiation message
+echo "==> Setting output files" >> "$LOG"
+
+# No user-defined output files required
+echo "No user-defined output files required" >> "$LOG"
+
+# Completion message
+echo "==> Setting output files: Finished" >> "$LOG"
+
+
 ###==== Directories ====###
 # Initiation message
 echo "==> Setting output directories" >> "$LOG"
 
-# Outputs from alignment (mapper.pl)
-OUTDIR_MAP="${PROJECT_ROOT}/results/methods_sections/03_alignment/03c_map_reads/mapper"
+# Directories for reference data files
+OUTDIR_MIRNA="${PROJECT_ROOT}/data/reference/miRNA"
 
 # Combine directories into array for simultaenous creation later
-DIR_LIST=("$OUTDIR_MAP")
+DIR_LIST=("$OUTDIR_MIRNA/mature" "$OUTDIR_MIRNA/hairpin")
 echo "Output directories required:" >> "$LOG"
 echo "${DIR_LIST[@]}" >> $LOG
 
 # Completion message
 echo "==> Setting output directories: Finished" >> "$LOG"
-
-
-
-###==== Files ====###
-# Initiation message
-echo "==> Setting output files" >> "$LOG"
-
-COLLAPSED_READS="$OUTDIR_MAP/${SAMPLE_NAME}_collapsed.fasta"
-MAPPED_READS="$OUTDIR_MAP/${SAMPLE_NAME}_vs_genome_GRCh38.arf" 
-
-
-
-# Completion message
-echo "==> Setting output files: Finished" >> "$LOG"
-
 
 
 #==========================#
@@ -282,11 +255,9 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting parameters" >> "$LOG"
 
-# Mapping filters:
-MIN_LENGTH=18
 
-echo "Mapping Filters:" >> "$LOG" 
-echo "MIN_LENGTH=$MIN_LENGTH" >> "$LOG"  
+# No specific configuration necessary
+echo "No user-defined configuration necessary" >> "$LOG"
 
 # Completion message
 echo "==> Setting parameters: Finished" >> "$LOG"
@@ -298,40 +269,41 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 #                the outputs of the script
 
 
-# Initiation message
-echo "$(timestamp)" "==> Initiating miRDeep2" >> "$LOG"
+# Define the types of miRNA to be downloaded from miRBase
+MIRNA_LIST=("mature" "hairpin")
 
-# Define temporary unzipped FASTQ file for mapper.pl (miRDeep2) compatability
-TEMP_TRIMMED_FASTQ=$(basename "$TRIMMED_READS" .gz)
+# Download and clean miRNA reference files for 'mature' and 'hairpin'
+for mirna_form in "${MIRNA_LIST[@]}"; do
 
-# Create temporary unzipped FASTQ file
-gunzip -c "$SAMPLE_FILE" > "$TEMP_TRIMMED_FASTQ"
+    # Ensure output directory exists; if not, creates it
+    mkdir -p "${OUTDIR_MIRNA}/${mirna_form}"
 
-# Execute mapping
-mapper.pl \
-"$TEMP_TRIMMED_FASTQ" \
--g hsa \
--l "$MIN_LENGTH" \
--n -h -e -i -j -m \
--k TGGAATTCTCGGGTGCCAAGG \
--s "$COLLAPSED_READS" \
--p "$INDIR_GENOME_INDEX" \
--t "$MAPPED_READS" 
+    # Navigate to reference directory
+    cd "${OUTDIR_MIRNA}/${mirna_form}"
 
+    # Initiation message
+    echo "$(timestamp)" "==> Downloading $mirna_form miRNA sequences (all species) from miRBase" >> "$LOG"
 
-# Remove temporary FASTQ file
-rm "$TEMP_TRIMMED_FASTQ"
+    # Download FASTA reference file (not zipped)
+    wget https://www.mirbase.org/download/${mirna_form}.fa
 
+    # Extract Homo sapiens (hsa) miRNA sequences
+    awk '/^>/ {keep = ($0 ~ /hsa/)} keep' ${mirna_form}.fa > ${mirna_form}_hsa_inc_whitespace.fa
 
+    # Remove white-space from FASTA file for downstream compatbility with miRDeep2 (alignment software)
+    remove_white_space_in_id.pl ${mirna_form}_hsa_inc_whitespace.fa > ${mirna_form}_hsa_excl_whitespace.fa
 
-# Completion message
-echo "$(timestamp)" "==> miRDeep2 Finished" >> "$LOG"
+    # Completion message
+    echo "$(timestamp)" "==> Finished downloading $mirna_form miRNA sequences (all species) from miRBase" >> "$LOG"
+
+done
+
 
 
 
 # Script completion message
 echo "Completed script: $SLURM_JOB_NAME.sh"  >> "$LOG"
-echo "Date completed" "$(date)" >> "$LOG"
+echo "Date completed:" "$(date)" >> "$LOG"
 echo "<------------------------------------------------------->" >> "$LOG"
 
 #==============================================================================#

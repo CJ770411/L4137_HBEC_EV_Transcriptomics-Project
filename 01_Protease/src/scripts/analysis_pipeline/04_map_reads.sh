@@ -2,7 +2,7 @@
 
 
 #==============================================================================#
-# Script Name: 03c_map_reads.sh
+# Script Name: 04_map_reads.sh
 #
 # Last updated: 14/05/2026 (dd/mm/yyyy)
 #
@@ -11,7 +11,7 @@
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch 03c_map_reads.sh
+#     sbatch 04_map_reads.sh
 #
 # Software:
 #   miRDeep2 v2.0.1.3
@@ -41,9 +41,9 @@
 #SBATCH --cpus-per-task=4                              # Number of cores
 #SBATCH --mem=20G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=03c_map_reads                             # Name assigned to job allocation
-#SBATCH --output=../../logs/03_alignment/03c_map_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/03_alignment/03c_map_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --job-name=04_map_reads                             # Name assigned to job allocation
+#SBATCH --output=../../logs/analysis_pipeline/run_01/04_map_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/analysis_pipeline/run_01/04_map_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 #SBATCH --array=0-14                                   # One job per sample (15 samples)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
@@ -64,7 +64,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/03_alignment/03c_map_reads")
+LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_01/04_map_reads")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -93,15 +93,11 @@ echo "==> Setting up in-script navigation" >> "$LOG"
 PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../..")" 
 echo "Project Root: $PROJECT_ROOT" >> "$LOG"
 
-#   2. Extract script prefix for methods subsection
-SCRIPT_PREFIX="${SLURM_JOB_NAME%%[!0-9]*}"
-echo "Script Prefix: $SCRIPT_PREFIX" >> "$LOG"
-
-#   3. Define this script
-SCRIPT=${PROJECT_ROOT}/scripts/${SCRIPT_PREFIX}*/${SLURM_JOB_NAME}.sh
+#   2. Define this script
+SCRIPT=${PROJECT_ROOT}/scripts/analysis_pipeline/${SLURM_JOB_NAME}.sh
 echo "Script Name: $SLURM_JOB_NAME.sh" >> "$LOG"
 
-#   4. Ensure script is called from directory containing script
+#   3. Ensure script is called from directory containing script
 #      Exit status 1 if script not found
 if [ ! -f $SCRIPT ]; then
    echo "Error: script must be called from the directory containing $SLURM_JOB_NAME.sh" >&2
@@ -111,6 +107,7 @@ fi
 
 # Completion message
 echo "==> Setting up in-script navigation: Finished" >> "$LOG"
+
 
 #==========================#
 # SETUP ENVIRONMENT      
@@ -169,12 +166,8 @@ timestamp() {
 echo "==> Setting input files" >> "$LOG"
 echo "Input file(s):" >> "$LOG"
 
-# Homo sapiens reference genome bowtie index directory
-INDIR_GENOME_INDEX="${PROJECT_ROOT}/data/reference/GRCh38.p14/GRCh38_genome" 
-echo "$(timestamp)" "==> Directory containing Homo sapiens genome index files: "$INDIR_GENOME_INDEX >> "$LOG"
-
 # Trimmed reads directory
-INDIR_TRIMMED_READS="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02b_trimming/cutadapt"
+INDIR_TRIMMED_READS="${PROJECT_ROOT}/results/analysis_pipeline/run_01/01_raw_read_trimming/cutadapt"
 echo "$(timestamp)" "==> Directory containing trimmed reads: "$INDIR_TRIMMED_READS >> "$LOG"
 
 # Completion message
@@ -220,7 +213,7 @@ echo "==> Setting input files: Finished" >> "$LOG"
 echo "==> Setting output directories" >> "$LOG"
 
 # Outputs from alignment (mapper.pl)
-OUTDIR_MAP="${PROJECT_ROOT}/results/methods_sections/03_alignment/03c_map_reads/mapper"
+OUTDIR_MAP="${PROJECT_ROOT}/results/analysis_pipeline/run_01/04_map_reads/mapper"
 
 # Combine directories into array for simultaenous creation later
 DIR_LIST=("$OUTDIR_MAP")
@@ -283,7 +276,7 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 echo "==> Setting parameters" >> "$LOG"
 
 # Mapping filters:
-MIN_LENGTH=18
+MIN_LENGTH=17
 
 echo "Mapping Filters:" >> "$LOG" 
 echo "MIN_LENGTH=$MIN_LENGTH" >> "$LOG"  
@@ -302,7 +295,7 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 echo "$(timestamp)" "==> Initiating miRDeep2" >> "$LOG"
 
 # Define temporary unzipped FASTQ file for mapper.pl (miRDeep2) compatability
-TEMP_TRIMMED_FASTQ=$(basename "$TRIMMED_READS" .gz)
+TEMP_TRIMMED_FASTQ=$(basename "$SAMPLE_FILE" .gz)
 
 # Create temporary unzipped FASTQ file
 gunzip -c "$SAMPLE_FILE" > "$TEMP_TRIMMED_FASTQ"
@@ -310,14 +303,10 @@ gunzip -c "$SAMPLE_FILE" > "$TEMP_TRIMMED_FASTQ"
 # Execute mapping
 mapper.pl \
 "$TEMP_TRIMMED_FASTQ" \
--g hsa \
+-e -h -j -m \
 -l "$MIN_LENGTH" \
--n -h -e -i -j -m \
--k TGGAATTCTCGGGTGCCAAGG \
--s "$COLLAPSED_READS" \
--p "$INDIR_GENOME_INDEX" \
--t "$MAPPED_READS" 
-
+-o "$SLURM_CPUS_PER_TASK" \
+-s "$COLLAPSED_READS" 
 
 # Remove temporary FASTQ file
 rm "$TEMP_TRIMMED_FASTQ"

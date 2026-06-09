@@ -2,19 +2,20 @@
 
 
 #==============================================================================#
-# Script Name: 03c_map_reads.sh
+# Script Name: 01_raw_read_trimming.sh
 #
-# Last updated: 14/05/2026 (dd/mm/yyyy)
+# Last updated: 11/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   []
+#   - Isolate miRNA reads
+#   - Remove adapter contamination (PCR by-product)
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch 03c_map_reads.sh
+#     sbatch 01_raw_read_trimming.sh
 #
 # Software:
-#   miRDeep2 v2.0.1.3
+#   cutadapt v5.2
 #
 # VERSION: 1.0
 #
@@ -35,16 +36,15 @@
 #   SLURM Submission: Defines the SLRUM parameters required to execute
 #                     all steps of this script
 
-#SBATCH --partition=defq                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
+#SBATCH --partition=defq                               # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
 #SBATCH --nodes=1                                      # Number of nodes
 #SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=4                              # Number of cores
-#SBATCH --mem=20G                                      # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --cpus-per-task=16                             # Number of cores
+#SBATCH --mem=32G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=03c_map_reads                             # Name assigned to job allocation
-#SBATCH --output=../../logs/03_alignment/03c_map_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/03_alignment/03c_map_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --array=0-14                                   # One job per sample (15 samples)
+#SBATCH --job-name=01_raw_read_trimming                             # Name assigned to job allocation
+#SBATCH --output=../../logs/analysis_pipeline/run_01/01_raw_read_trimming/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/analysis_pipeline/run_01/01_raw_read_trimming/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -64,14 +64,14 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/03_alignment/03c_map_reads")
+LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_01/01_raw_read_trimming")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
 
 # Define unique log file
 #    File name: contains script execution-specific information and date executed
-LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.log" 
+LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}.log" 
 
 
 # Script initialisation message
@@ -93,12 +93,8 @@ echo "==> Setting up in-script navigation" >> "$LOG"
 PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../..")" 
 echo "Project Root: $PROJECT_ROOT" >> "$LOG"
 
-#   2. Extract script prefix for methods subsection
-SCRIPT_PREFIX="${SLURM_JOB_NAME%%[!0-9]*}"
-echo "Script Prefix: $SCRIPT_PREFIX" >> "$LOG"
-
 #   3. Define this script
-SCRIPT=${PROJECT_ROOT}/scripts/${SCRIPT_PREFIX}*/${SLURM_JOB_NAME}.sh
+SCRIPT=${PROJECT_ROOT}/scripts/analysis_pipeline/${SLURM_JOB_NAME}.sh
 echo "Script Name: $SLURM_JOB_NAME.sh" >> "$LOG"
 
 #   4. Ensure script is called from directory containing script
@@ -122,7 +118,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease_mirdeep2"
+CONDA_ENV="L4137_01_Protease_cutadapt"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -163,49 +159,28 @@ timestamp() {
 #   Inputs: Contains all user-defined input files 
 #           and directories called within this script
 
-###==== Directories ====###
-
-# Initiation message
-echo "==> Setting input files" >> "$LOG"
-echo "Input file(s):" >> "$LOG"
-
-# Homo sapiens reference genome bowtie index directory
-INDIR_GENOME_INDEX="${PROJECT_ROOT}/data/reference/GRCh38.p14/GRCh38_genome" 
-echo "$(timestamp)" "==> Directory containing Homo sapiens genome index files: "$INDIR_GENOME_INDEX >> "$LOG"
-
-# Trimmed reads directory
-INDIR_TRIMMED_READS="${PROJECT_ROOT}/results/methods_sections/02_quality_control/02b_trimming/cutadapt"
-echo "$(timestamp)" "==> Directory containing trimmed reads: "$INDIR_TRIMMED_READS >> "$LOG"
-
-# Completion message
-echo "==> Setting input directories: Finished" >> "$LOG"
-
-
-
 ###==== Files ====###
 # Initiation message
 echo "==> Setting input files" >> "$LOG"
+
+# All FASTQ files containing the NGS sequencing output
+RAW_READS=(${PROJECT_ROOT}/data/raw/*fastq.gz)
 echo "Input file(s):" >> "$LOG"
-
-
-
-# Load trimmed read files into an array for parallel analysis
-mapfile -t TRIMMED_READS < <(find "$INDIR_TRIMMED_READS" -name "*.fastq.gz" | sort)
-
-# Identify sample based on SLURM_ARRAY_TASK_ID
-SAMPLE_FILE="${TRIMMED_READS[$SLURM_ARRAY_TASK_ID]}"
-echo "$(timestamp)" "==> Sample file: "$SAMPLE_FILE >> "$LOG"
-
-# Extract sample name
-SAMPLE_NAME=$(basename "$SAMPLE_FILE" .fastq.gz)
-echo "$(timestamp)" "==> Sample name: "$SAMPLE_NAME >> "$LOG"
-
+echo "${RAW_READS[@]}" >> "$LOG"
 
 # Completion message
 echo "==> Setting input files: Finished" >> "$LOG"
 
+###==== Directories ====###
 
+# Initiation message
+echo "==> Setting input directories" >> "$LOG"
 
+# No input directories required
+echo "No input directories required" >> "$LOG"
+
+# Completion message
+echo "==> Setting input directories: Finished" >> "$LOG"
 
 
 
@@ -215,35 +190,32 @@ echo "==> Setting input files: Finished" >> "$LOG"
 #   Outputs: Contains all user-defined output files 
 #            and directories called within this script
 
-###==== Directories ====###
-# Initiation message
-echo "==> Setting output directories" >> "$LOG"
-
-# Outputs from alignment (mapper.pl)
-OUTDIR_MAP="${PROJECT_ROOT}/results/methods_sections/03_alignment/03c_map_reads/mapper"
-
-# Combine directories into array for simultaenous creation later
-DIR_LIST=("$OUTDIR_MAP")
-echo "Output directories required:" >> "$LOG"
-echo "${DIR_LIST[@]}" >> $LOG
-
-# Completion message
-echo "==> Setting output directories: Finished" >> "$LOG"
-
-
-
 ###==== Files ====###
 # Initiation message
 echo "==> Setting output files" >> "$LOG"
 
-COLLAPSED_READS="$OUTDIR_MAP/${SAMPLE_NAME}_collapsed.fasta"
-MAPPED_READS="$OUTDIR_MAP/${SAMPLE_NAME}_vs_genome_GRCh38.arf" 
-
-
+# No user-defined output files required
+echo "No user-defined output files required" >> "$LOG"
 
 # Completion message
 echo "==> Setting output files: Finished" >> "$LOG"
 
+
+###==== Directories ====###
+# Initiation message
+echo "==> Setting output directories" >> "$LOG"
+
+# Directory for all output quality reports
+OUTDIR_CUTADAPT="${PROJECT_ROOT}/results/analysis_pipeline/run_01/01_raw_read_trimming/cutadapt"
+
+# Combine directories into array for simultaenous creation later
+DIR_LIST=("$OUTDIR_CUTADAPT")
+echo "Output directories required:" >> "$LOG"
+echo "${DIR_LIST[@]}" >> $LOG
+
+
+# Completion message
+echo "==> Setting output directories: Finished" >> "$LOG"
 
 
 #==========================#
@@ -282,11 +254,15 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting parameters" >> "$LOG"
 
-# Mapping filters:
-MIN_LENGTH=18
 
-echo "Mapping Filters:" >> "$LOG" 
-echo "MIN_LENGTH=$MIN_LENGTH" >> "$LOG"  
+# Trimming filters:
+MIN_LENGTH=17
+MIN_QUAL=30
+
+echo "Trimming Filters:" >> "$LOG" 
+echo "MIN_LENGTH=$MIN_LENGTH" >> "$LOG" 
+echo "MIN_QUAL=$MIN_QUAL" >> "$LOG" 
+
 
 # Completion message
 echo "==> Setting parameters: Finished" >> "$LOG"
@@ -299,33 +275,27 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 
 
 # Initiation message
-echo "$(timestamp)" "==> Initiating miRDeep2" >> "$LOG"
+echo "$(timestamp)" "==> Initiating cutadapt" >> "$LOG"
 
-# Define temporary unzipped FASTQ file for mapper.pl (miRDeep2) compatability
-TEMP_TRIMMED_FASTQ=$(basename "$TRIMMED_READS" .gz)
+# Run cutadapt to trim raw read data for each sample
+for sample in "${RAW_READS[@]}"; do
 
-# Create temporary unzipped FASTQ file
-gunzip -c "$SAMPLE_FILE" > "$TEMP_TRIMMED_FASTQ"
+    SAMPLE_NAME=$(basename "$sample" .fastq.gz)
 
-# Execute mapping
-mapper.pl \
-"$TEMP_TRIMMED_FASTQ" \
--g hsa \
--l "$MIN_LENGTH" \
--n -h -e -i -j -m \
--k TGGAATTCTCGGGTGCCAAGG \
--s "$COLLAPSED_READS" \
--p "$INDIR_GENOME_INDEX" \
--t "$MAPPED_READS" 
+    cutadapt \
+        -j "$SLURM_CPUS_PER_TASK" \
+        -a Realseq3P=TGGAATTCTC \
+        -u1 \
+        --discard-untrimmed \
+        -m "$MIN_LENGTH" \
+        -q "$MIN_QUAL" \
+        -o "${OUTDIR_CUTADAPT}/${SAMPLE_NAME}_trimmed.fastq.gz" \
+        "$sample"
 
-
-# Remove temporary FASTQ file
-rm "$TEMP_TRIMMED_FASTQ"
-
-
+done
 
 # Completion message
-echo "$(timestamp)" "==> miRDeep2 Finished" >> "$LOG"
+echo "$(timestamp)" "==> cutadapt Finished" >> "$LOG"
 
 
 
