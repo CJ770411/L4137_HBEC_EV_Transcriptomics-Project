@@ -49,11 +49,12 @@ count_matrix <- count_matrix[, c("Symbol",
                                  "NGS-110-030_S30_R1_001", "NGS-110-019_S19_R1_001", "NGS-110-008_S8_R1_001")]
 
 # Set new column names
-colnames(count_matrix) <- c("Symbol", "PBS_1", "PBS_2", "PBS_3",
-                            "0_005_1", "0_005_2", "0_005_3",
-                             "0_08_1", "0_08_2", "0_08_3",
-                            "2_1", "2_2", "2_3",
-                            "24_1", "24_2", "24_3")
+colnames(count_matrix) <- c("Symbol", 
+                            "Control__1", "Control__2", "Control__3",
+                            "Dose0_005__1", "Dose0_005__2", "Dose0_005__3",
+                            "Dose0_08__1", "Dose0_08__2", "Dose0_08__3",
+                            "Dose2__1", "Dose2__2", "Dose2__3",
+                            "Dose24__1", "Dose24__2", "Dose24__3")
 
 # Remove rows with 0 counts
 count_matrix <- count_matrix[rowSums(count_matrix[,-1]) > 0, ] # excludes miRNA column (col1) because it doesn't work on character vectors

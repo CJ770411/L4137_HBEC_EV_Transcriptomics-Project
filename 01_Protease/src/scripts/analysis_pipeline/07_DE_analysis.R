@@ -67,6 +67,18 @@ plotBCV(dge)
 # Fit quasi-likelihood F test model for each miRNA
 fit <- glmQLFit(dge, design, robust = TRUE)
 
+# Save 'dge' and 'group' objects for PCA plot generation
+saveRDS(
+  dge,
+  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/dge.rds"
+)
+
+saveRDS(
+  group,
+  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/dge_group.rds"
+)
+
+
 
 #==========================#
 # Differential Expression      
@@ -139,5 +151,10 @@ sig_results_FDR005_dose24 <- all_results_dose24[all_results_dose24$FDR<0.05,]
 write.csv(all_results_dose24, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/all_results_dose24.csv", row.names = FALSE)
 write.csv(sig_results_FDR005_dose24, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/sig_results_FDR005_dose24.csv", row.names = FALSE)
 
+# Save DE object for MA plot
+saveRDS(
+  all_results_dose24,
+  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/all_results_dose24.rds"
+)
 
 
