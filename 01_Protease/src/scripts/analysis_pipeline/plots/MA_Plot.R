@@ -4,7 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(ggrepel)
 library(stringr)
-library(plotl)
+library(plotly)
 library(htmlwidgets)
 
 
@@ -36,15 +36,15 @@ x_max <- ceiling(max(all_results_dose24$logCPM))
 ma_plot <- ggplot(all_results_dose24, aes(x = logCPM, y = logFC, color = significance, size = significance, alpha = significance,
                                text = paste(
                                  "Symbol:", Symbol,
-                                 "<br>logFC:", round(logFC, 2),
-                                 "<br>logCPM:", round(logCPM, 2),
+                                 "<br>logFC:", round(logFC, 3),
+                                 "<br>logCPM:", round(logCPM, 3),
                                  "<br>FDR:", signif(FDR, 3)
                                  ))) +
   geom_point() +
   scale_color_manual(
     values = c("Not significant" = "gray80",
-               "Downregulated" = "navyblue",
-               "Upregulated" = "red")
+               "Downregulated" = "#0072B2",
+               "Upregulated" = "#D55E00")
   ) +
   scale_size_manual(    
     values = c("Not significant" = 3,
@@ -81,16 +81,16 @@ print(ma_plot)
 
 
 # Save MA plot
-ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/figures/MA_plot.svg", plot = ma_plot, width=10, height=7, units='in')
+ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/plots/MA_plot.svg", plot = ma_plot, width=10, height=7, units='in')
 
-# Add interactive hover information
+# Visualise interactive MA plot
 ma_plot %>%
   ggplotly(tooltip = "text")
 
 # Save interactive MA plot
 saveWidget(
   ggplotly(ma_plot, tooltip = "text"),
-  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/figures/MA_plot.html",
+  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/plots/MA_plot.html",
   selfcontained = TRUE
 )
 

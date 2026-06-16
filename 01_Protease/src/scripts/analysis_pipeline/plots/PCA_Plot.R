@@ -93,7 +93,7 @@ pca_plot <- ggplot(pca_data, aes(PC1, PC2, color=Group, label = Sample_label)) +
 print(pca_plot)
 
 # Save PCA plot
-ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/figures/PCA_plot.svg", plot = pca_plot, width=10, height=7, units='in')
+ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/plots/PCA_plot.svg", plot = pca_plot, width=10, height=7, units='in')
 
 
 
