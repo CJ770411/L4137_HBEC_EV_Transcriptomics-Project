@@ -1,13 +1,9 @@
 # Load necessary libraries
 library(edgeR)
 library(dplyr)
-library(ggplot2)
-library(ggrepel)
-library(stringr)
-library(plotly)
-library(htmlwidgets)
 library(pheatmap)
 library(viridis)
+library(RColorBrewer)
 
 
 #==========================#
@@ -29,7 +25,7 @@ dge <- readRDS(
 #==========================#
 
 # Create subset of significant DE miRNAs 
-top_genes <- all_results_dose24[all_results_dose24$FDR<0.05,]
+top_mirnas <- all_results_dose24[all_results_dose24$FDR<0.05,]
 
 # Calculate log2CPM values
 logCPM <- cpm(dge, log = TRUE, prior.count = 1) # Adds 1 count to all observations to prevent inf values
@@ -38,9 +34,9 @@ logCPM <- cpm(dge, log = TRUE, prior.count = 1) # Adds 1 count to all observatio
 rownames(logCPM) <- dge$genes$Symbol
 
 # Refine to only subset of top miRNAs
-logCPM_subset <- logCPM[top_genes$Symbol, ]
+logCPM_subset <- logCPM[top_mirnas$Symbol, ]
 
-# Scale for z-score
+# Scale for z-score (relative expression levels)
 logCPM_subset_scaled <- t(scale(t(logCPM_subset)))
 
 # Extract groups (treatment conditions) from 'dge' object
@@ -52,7 +48,7 @@ annotation_col <- data.frame(Group = group)
 # Set sample ID as row names
 rownames(annotation_col) <- colnames(logCPM_subset_scaled)
 
-# Create colour pallette
+# Create colour palette
 heatmap_colours <- colorRampPalette(
   rev(brewer.pal(11, "RdBu"))
   )(100)
@@ -66,9 +62,9 @@ pheatmap(
   clustering_distance_cols = "correlation",
   clustering_method = "average",
   show_rownames = FALSE,
-  fontsize_col = 10,
+  fontsize_col = 13,
   border_color = NA,
   color = heatmap_colours
 )
 
-# [] need to check whether to scale before heatmap or scale using scale = 'rows'
+

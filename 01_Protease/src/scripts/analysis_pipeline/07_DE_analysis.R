@@ -10,9 +10,6 @@ library(dplyr)
 # Read in count matrix from '04a_create_count_matrix'
 count_matrix <- read_tsv("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/06_create_count_matrix/edgeR_count_matrix.txt")
 
-# Convert count matrix to data frame
-#count_matrix <- as.data.frame(count_matrix)
-
 # Create experimental condition labels 
 group <- factor(c("Control", "Control", "Control",
                   "Dose_0_005", "Dose_0_005", "Dose_0_005",
@@ -37,7 +34,7 @@ dge$samples
 # Observe number of miRNAs pre-filtering
 nrow(dge)
 
-# Identify miRNA with sufficient counts in samples, n, where n=sample count in smallest group.
+# Identify miRNA with sufficient counts in samples, n, where n=sample count in smallest group
 keep <- filterByExpr(dge)
 
 # Filter miRNA to keep only miRNAs with worthwhile counts
