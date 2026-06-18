@@ -4,6 +4,7 @@ library(multiMiR)
 library(clusterProfiler)
 library(org.Hs.eg.db)
 library(dplyr)
+library(ReactomePA)
 
 
 
@@ -11,8 +12,8 @@ library(dplyr)
 # User Configuration 
 #==========================#
 
-logFC_threshold <- 1.5 # miRNA expression threshold
-mirna_count <- 3 # Minimum number of miRNAs required to target a target gene
+logFC_threshold <- 1 # miRNA expression threshold
+mirna_count <- 1 # Minimum number of miRNAs required to target a target gene
 database_count <- 1 # Minimum number of databases a target gene must appear in
 
 
@@ -20,83 +21,106 @@ database_count <- 1 # Minimum number of databases a target gene must appear in
 # Create Background Universe 
 #==========================#
 
+# [] needs to have separate background universes for upregulated and downregulated de mirnas
 
-# Gene expression data from https://www.proteinatlas.org/humanproteome/single+cell/single+cell+type/data#cell_type_data 
-# download file: rna_single_cell_type_cell_types.tsv.zip
-hbec_gene_file <- read.delim("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/methods_sections/05_functional_enrichment/rna_single_cell_type.tsv")
+# Read in signficant results from dose 24 vs control
+dose24_data <- read_csv("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/sig_results_FDR005_dose24.csv")
 
-# Create list of HBEC-related cells
-airway_cells <- c(
-  "respiratory basal cells",
-  "respiratory ciliated cells",
-  "respiratory secretory cells",
-  "respiratory ionocytes",
-  "respiratory deuterosomal cells"
-)
+# Extract UP- and DOWN-regulated miRNAs
+dose24_mirnas_all_up <- dose24_data %>% filter(logFC > 0) # Upregulated
+dose24_mirnas_all_down <- dose24_data %>% filter(logFC < 0) # Downregulated
 
-# Get unique genes from HBEC-related cell types and have >1 count per million reads
-hbec_genes <- hbec_gene_file %>%
-  filter(`Cell.type` %in% airway_cells,
-         nCPM > 1) %>%
-  pull(`Gene.name`) %>%
-  unique()
+# Create list of miRNA IDs
+mirnas_all_up <- dose24_mirnas_all_up$Symbol
+mirnas_all_down <- dose24_mirnas_all_down$Symbol
 
-# Convert gene symbol to Entrez format
-hbec_genes_entrez <- bitr(
-  hbec_genes,
-  fromType = "SYMBOL",
-  toType = "ENTREZID",
-  OrgDb = org.Hs.eg.db
-)
+# Identify gene targets for all DE miRNAs
+target_results_background_up <- get_multimir(mirna = mirnas_all_up, table = "validated")
+target_results_background_down <- get_multimir(mirna = mirnas_all_down, table = "validated")
 
-# Convert Entrez genes to character vector for KEGG analysis
-hbec_genes_entrez <- hbec_genes_entrez$ENTREZID
-
+# Remove redundant target genes
+target_results_background_up_unique <- unique(target_results_background_up@data$target_entrez)
+target_results_background_down_unique <- unique(target_results_background_down@data$target_entrez)
 
 
 #==========================#
 # Identify Target Genes
 #==========================#
 
-# Read in signficant results from dose 24 vs control
-dose24_data <- read_csv("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/sig_results_FDR005_dose24.csv")
-
-# Extract UP- and DOWN-regulated miRNAs
-dose24_data_up <- dose24_data %>% filter(logFC > logFC_threshold) # Upregulated
-dose24_data_down <- dose24_data %>% filter(logFC < -logFC_threshold) # Downregulated
+# Extract significant UP- and DOWN-regulated miRNAs
+dose24_data_sig_up <- dose24_data %>% filter(logFC > logFC_threshold) # Upregulated
+dose24_data_sig_down <- dose24_data %>% filter(logFC < -logFC_threshold) # Downregulated
 
 # Create list of miRNA IDs
-dose24_miRNA_list_up <- dose24_data_up$Symbol
-dose24_miRNA_list_down <- dose24_data_down$Symbol
+dose24_miRNA_list_up <- dose24_data_sig_up$Symbol
+dose24_miRNA_list_down <- dose24_data_sig_down$Symbol
 
 # Identify gene targets for each miRNA
 target_results_up <- get_multimir(mirna = dose24_miRNA_list_up, table = "validated")
 target_results_down <- get_multimir(mirna = dose24_miRNA_list_down, table = "validated")
 
-# Filter target genes based on:
-#     1. No. miRNAs targeting the target gene
-#     2. No. databases the target gene appears in
+# Remove redundant target genes
+target_results_up_unique <- unique(target_results_up@data$target_entrez)
+target_results_down_unique <- unique(target_results_down@data$target_entrez)
 
-# Upregulated
-target_results_up_filtered <- target_results_up@data %>%
-    group_by(target_entrez) %>%
-    summarise(
-      n_miRNAs = n_distinct(mature_mirna_id),
-      n_db = n_distinct(database)
-    ) %>%
-    filter(n_miRNAs >= mirna_count,
-           n_db >= database_count)
 
-# Downregulated
-target_results_down_filtered <- target_results_down@data %>%
-  group_by(target_entrez) %>%
-  summarise(
-    n_miRNAs = n_distinct(mature_mirna_id),
-    n_db = n_distinct(database)
-  ) %>%
-  filter(n_miRNAs >= mirna_count,
-         n_db >= database_count)
+for (mirna_symbol in dose24_miRNA_list_up) {
+  
+  targets <- get_multimir(mirna = mirna_symbol, table = 'mirtarbase')
+  
+  genes <- targets@data$target_entrez
+  
+  genes_unique <- unique((targets@data$target_entrez))
+  
+  print(mirna_symbol)
+  
+  print('Genes:')
+  
+  print(length(genes_unique))
+  
+  ekegg <- enrichKEGG(genes_unique)
+  
+  print('Pathways:')
+  
+  print(length(ekegg@result$p.adjust[ekegg@result$p.adjust < 1]))
+  
+  print('Pathways below Padj 0.05:')
+  
+  print(length(ekegg@result$p.adjust[ekegg@result$p.adjust < 0.05]))
+#  result <- as.data.frame(ekegg)
+  
+#  print(result)
+ # return(result)
 
+}
+
+tgtscn <- get_multimir(mirna = 'hsa-miR-26a-5p', table = 'targetscan')
+
+mirdb <- get_multimir(mirna = 'hsa-miR-26a-5p', table = 'mirdb')
+length(unique(tgtscn@data$target_symbol))
+
+mirtarbase <- get_multimir(mirna = 'hsa-miR-26a-5p', table = 'mirtarbase')
+length(unique(mirtarbase@data$target_symbol))
+
+tarbase <- get_multimir(mirna = 'hsa-miR-26a-5p', table = 'tarbase')
+length(unique(tarbase@data$target_symbol))
+
+length(unique(mirdb@data$target_symbol))
+View(mirdb@data)
+
+table(targets@data$database)
+
+targets@data %>%
+  filter(database == 'tarbase') %>%
+  head(20)
+
+targets@data %>%
+  filter(database == 'mirtarbase') %>%
+  head(20)
+
+targets@data %>%
+  filter(database == 'mirecords') %>%
+  head(20)
 
 #==========================#
 # KEGG Enrichment
