@@ -6,12 +6,13 @@ library(org.Hs.eg.db)
 library(dplyr)
 library(ReactomePA)
 
+
 #==========================#
 # User Configuration 
 #==========================#
 
 
-logFC_threshold <- 1 # miRNA expression threshold
+# n/a
 
 #==========================#
 # Create Background Universe 
@@ -21,7 +22,7 @@ logFC_threshold <- 1 # miRNA expression threshold
 count_matrix <- read_tsv("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/06_create_count_matrix/edgeR_count_matrix.txt")
 
 # Isolate reads from Dose 24 vs Control
-dose24_data  <- count_matrix %>% dplyr::select(Symbol,
+dose24_data  <- count_matrix %>% select(Symbol,
                                         Control__1, Control__2, Control__3, 
                                         Dose24__1, Dose24__2, Dose24__3)
 

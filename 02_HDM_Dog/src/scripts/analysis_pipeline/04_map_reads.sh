@@ -2,16 +2,16 @@
 
 
 #==============================================================================#
-# Script Name: 05_read_quantification.sh
+# Script Name: 04_map_reads.sh
 #
-# Last updated: 18/05/2026 (dd/mm/yyyy)
+# Last updated: 14/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
 #   []
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch 05_read_quantification.sh
+#     sbatch 04_map_reads.sh
 #
 # Software:
 #   miRDeep2 v2.0.1.3
@@ -38,12 +38,12 @@
 #SBATCH --partition=defq                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
 #SBATCH --nodes=1                                      # Number of nodes
 #SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=1                              # Number of cores
-#SBATCH --mem=16G                                      # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=05_read_quantification                             # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_01/05_read_quantification/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_01/05_read_quantification/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --cpus-per-task=4                              # Number of cores
+#SBATCH --mem=20G                                      # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
+#SBATCH --job-name=04_map_reads                             # Name assigned to job allocation
+#SBATCH --output=../../logs/analysis_pipeline/run_01/04_map_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/analysis_pipeline/run_01/04_map_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 #SBATCH --array=0-14                                   # One job per sample (15 samples)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
@@ -64,7 +64,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_01/05_read_quantification")
+LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_01/04_map_reads")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -72,6 +72,7 @@ mkdir -p "${LOG_DIR}"
 # Define unique log file
 #    File name: contains script execution-specific information and date executed
 LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.log" 
+
 
 # Script initialisation message
 echo "<------------------------------------------------------->" >> "$LOG"
@@ -107,6 +108,7 @@ fi
 # Completion message
 echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 
+
 #==========================#
 # SETUP ENVIRONMENT      
 #==========================#
@@ -131,7 +133,7 @@ else
     exit 1
 fi
 conda activate "$CONDA_ENV"
-echo "Conda environment:" "$CONDA_ENV" >> "$LOG"
+echo "Conda Envrionment:" "$CONDA_ENV" >> "$LOG"
 
 # Completion message
 echo "==> Setting up environment: Finished" >> "$LOG"
@@ -158,52 +160,44 @@ timestamp() {
 #   Inputs: Contains all user-defined input files 
 #           and directories called within this script
 
-
 ###==== Directories ====###
 
 # Initiation message
-echo "==> Setting input directories" >> "$LOG"
+echo "==> Setting input files" >> "$LOG"
+echo "Input file(s):" >> "$LOG"
 
-# No input directories required
-echo "No input directories required" >> "$LOG"
-
+# Trimmed reads directory
+INDIR_TRIMMED_READS="${PROJECT_ROOT}/results/analysis_pipeline/run_01/01_raw_read_trimming/cutadapt"
+echo "$(timestamp)" "==> Directory containing trimmed reads: "$INDIR_TRIMMED_READS >> "$LOG"
 
 # Completion message
 echo "==> Setting input directories: Finished" >> "$LOG"
 
 
 
-
 ###==== Files ====###
 # Initiation message
 echo "==> Setting input files" >> "$LOG"
+echo "Input file(s):" >> "$LOG"
 
-# Collapsed read files (outoput from mapper.pl) into an array for parallel analysis
-COLLAPSED_FILES="${PROJECT_ROOT}/results/analysis_pipeline/run_01/04_map_reads/mapper"
 
-# Load collapsed reads into an array for parallel analysis
-mapfile -t COLLAPSED_FILES_ARRAY < <(find "$COLLAPSED_FILES" -name "*_collapsed.fasta" | sort)
+
+# Load trimmed read files into an array for parallel analysis
+mapfile -t TRIMMED_READS < <(find "$INDIR_TRIMMED_READS" -name "*.fastq.gz" | sort)
 
 # Identify sample based on SLURM_ARRAY_TASK_ID
-INFILE_COLLAPSED_READS="${COLLAPSED_FILES_ARRAY[$SLURM_ARRAY_TASK_ID]}"
-echo  "==> Sample file: "$INFILE_COLLAPSED_READS >> "$LOG"
+SAMPLE_FILE="${TRIMMED_READS[$SLURM_ARRAY_TASK_ID]}"
+echo "$(timestamp)" "==> Sample file: "$SAMPLE_FILE >> "$LOG"
 
 # Extract sample name
-SAMPLE_NAME=$(basename "$INFILE_COLLAPSED_READS" _collapsed.fasta)
-echo  "==> Sample name: "$SAMPLE_NAME >> "$LOG"
-
-# Mature miRNA FASTA file (miRBase)
-INFILE_MAT_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/mature/mature_hsa_excl_whitespace.fa"
-echo  "==> Mature miRNA: "$INFILE_MAT_MIRNA >> "$LOG"
-
-# Hairpin miRNA FASTA file (miRBase)
-INFILE_HAIR_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/hairpin/hairpin_hsa_excl_whitespace.fa"
-echo  "==> Hairpin miRNA: "$INFILE_HAIR_MIRNA >> "$LOG"
-
+SAMPLE_NAME=$(basename "$SAMPLE_FILE" .fastq.gz)
+echo "$(timestamp)" "==> Sample name: "$SAMPLE_NAME >> "$LOG"
 
 
 # Completion message
 echo "==> Setting input files: Finished" >> "$LOG"
+
+
 
 
 
@@ -214,20 +208,15 @@ echo "==> Setting input files: Finished" >> "$LOG"
 #   Outputs: Contains all user-defined output files 
 #            and directories called within this script
 
-
 ###==== Directories ====###
 # Initiation message
 echo "==> Setting output directories" >> "$LOG"
 
-# Directory for quantifier.pl outputs
-#       Distinct directory for each sample analysed
-OUTDIR_SAMPLE="${PROJECT_ROOT}/results/analysis_pipeline/run_01/05_read_quantification/${SAMPLE_NAME}"
-
-#       Directory containing only count matrices for all samples
-OUTDIR_ALL_SAMPLES="${PROJECT_ROOT}/results/analysis_pipeline/run_01/05_read_quantification/all_samples"
+# Outputs from alignment (mapper.pl)
+OUTDIR_MAP="${PROJECT_ROOT}/results/analysis_pipeline/run_01/04_map_reads/mapper"
 
 # Combine directories into array for simultaenous creation later
-DIR_LIST=("$OUTDIR_SAMPLE" "$OUTDIR_ALL_SAMPLES")
+DIR_LIST=("$OUTDIR_MAP")
 echo "Output directories required:" >> "$LOG"
 echo "${DIR_LIST[@]}" >> $LOG
 
@@ -240,11 +229,14 @@ echo "==> Setting output directories: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting output files" >> "$LOG"
 
-# No user-defined output files required
-echo "No user-defined output files required" >> "$LOG"
+COLLAPSED_READS="$OUTDIR_MAP/${SAMPLE_NAME}_collapsed.fasta"
+MAPPED_READS="$OUTDIR_MAP/${SAMPLE_NAME}_vs_genome_GRCh38.arf" 
+
+
 
 # Completion message
 echo "==> Setting output files: Finished" >> "$LOG"
+
 
 
 #==========================#
@@ -283,14 +275,14 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting parameters" >> "$LOG"
 
+# Mapping filters:
+MIN_LENGTH=17
 
-# No specific configuration necessary
-echo "No user-defined configuration necessary" >> "$LOG"
+echo "Mapping Filters:" >> "$LOG" 
+echo "MIN_LENGTH=$MIN_LENGTH" >> "$LOG"  
 
 # Completion message
 echo "==> Setting parameters: Finished" >> "$LOG"
-
-
 
 #==========================#
 # MAIN SCRIPT      
@@ -300,33 +292,29 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 
 
 # Initiation message
-echo "$(timestamp)" "==> Initiating miRDeep2 for" "$SAMPLE_NAME" >> "$LOG"
+echo "$(timestamp)" "==> Initiating miRDeep2" >> "$LOG"
 
+# Define temporary unzipped FASTQ file for mapper.pl (miRDeep2) compatability
+TEMP_TRIMMED_FASTQ=$(basename "$SAMPLE_FILE" .gz)
 
-# Navigate to the unique sample output directory
-cd "$OUTDIR_SAMPLE"
+# Create temporary unzipped FASTQ file
+gunzip -c "$SAMPLE_FILE" > "$TEMP_TRIMMED_FASTQ"
 
-# Quantify read counts to produce count matrix
-quantifier.pl \
--T $SLURM_CPUS_PER_TASK \
--p "$INFILE_HAIR_MIRNA" \
--m "$INFILE_MAT_MIRNA" \
--r "$INFILE_COLLAPSED_READS" \
--t hsa
+# Execute mapping
+mapper.pl \
+"$TEMP_TRIMMED_FASTQ" \
+-e -h -j -m \
+-l "$MIN_LENGTH" \
+-o "$SLURM_CPUS_PER_TASK" \
+-s "$COLLAPSED_READS" 
 
+# Remove temporary FASTQ file
+rm "$TEMP_TRIMMED_FASTQ"
 
-
-# Identify mature miRNA count file
-#       Note: "all_samples" is default naming convention from miRDeep2.
-#              The file only contains data from one sample.
-COUNT_MATRIX=$(find ./ -name "miRNAs_expressed_all_samples_*.csv")
-
-# Copy count matrix to directory containing all samples and re-name as sample name
-cp $COUNT_MATRIX "${OUTDIR_ALL_SAMPLES}"/${SAMPLE_NAME}_count_matrix.csv
 
 
 # Completion message
-echo "$(timestamp)" "==> miRDeep2 Finished for" "$SAMPLE_NAME" >> "$LOG"
+echo "$(timestamp)" "==> miRDeep2 Finished" >> "$LOG"
 
 
 

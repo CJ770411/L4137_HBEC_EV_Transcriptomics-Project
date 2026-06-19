@@ -81,8 +81,6 @@ saveRDS(
 # Differential Expression      
 #==========================#
 
-# [] need to use this threshold
-logFC_threshold <- 1 # miRNA expression threshold
 
 ###==== Dose: 0.005 ====###
 

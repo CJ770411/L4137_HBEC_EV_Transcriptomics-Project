@@ -6,7 +6,7 @@ library(dplyr)
 # User Configuration 
 #==========================#
 
-logFC_threshold <- 1 # miRNA expression threshold
+logFC_threshold <- 1.5 # miRNA expression threshold
 
 #==========================#
 # Create miRNA lists
