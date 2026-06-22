@@ -25,8 +25,12 @@ dose24_data  <- count_matrix %>% dplyr::select(Symbol,
                                         Control__1, Control__2, Control__3, 
                                         Dose24__1, Dose24__2, Dose24__3)
 
+
+# Remove rows with 0 counts
+dose24_data_filtered <- dose24_data[rowSums(dose24_data[,-1]) > 0, ] # excludes miRNA column (col1) because it doesn't work on character vectors
+
 # Create list of miRNA IDs
-dose24_mirnas_all <- dose24_data$Symbol
+dose24_mirnas_all <- dose24_data_filtered$Symbol
 
 # Identify gene targets for all DE miRNAs
 target_results_background <- get_multimir(mirna = dose24_mirnas_all, table = "mirtarbase")
