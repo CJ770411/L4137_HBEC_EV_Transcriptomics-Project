@@ -8,7 +8,7 @@ library(readr)
 library(dplyr)
 
 # Read in count matrix
-count_matrix <- read_tsv("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/06_create_count_matrix/edgeR_count_matrix.txt")
+count_matrix <- read_tsv("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/06_create_count_matrix/edgeR_count_matrix.txt")
 
 # Create experimental condition labels 
 group <- factor(c("Control", "Control", "Control",
@@ -67,12 +67,12 @@ fit <- glmQLFit(dge, design, robust = TRUE)
 # Save 'dge' and 'group' objects for PCA plot generation
 saveRDS(
   dge,
-  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/dge.rds"
+  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/dge.rds"
 )
 
 saveRDS(
   group,
-  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/dge_group.rds"
+  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/dge_group.rds"
 )
 
 
@@ -96,8 +96,8 @@ all_results_dose0005 <- as.data.frame(topTags(qlf_dose0005, n=nrow(qlf_dose0005)
 sig_results_FDR005_dose0005 <- all_results_dose0005[all_results_dose0005$FDR<0.05,]
 
 # Save the DE results as CSV file
-write.csv(all_results_dose0005, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/all_results_dose0005.csv", row.names = FALSE)
-write.csv(sig_results_FDR005_dose0005, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/sig_results_FDR005_dose0005.csv", row.names = FALSE)
+write.csv(all_results_dose0005, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/all_results_dose0005.csv", row.names = FALSE)
+write.csv(sig_results_FDR005_dose0005, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/sig_results_FDR005_dose0005.csv", row.names = FALSE)
 
 
 
@@ -113,8 +113,8 @@ all_results_dose008 <- as.data.frame(topTags(qlf_dose008, n=nrow(qlf_dose008)))
 sig_results_FDR005_dose008 <- all_results_dose008[all_results_dose008$FDR<0.05,]
 
 # Save the DE results as CSV file
-write.csv(all_results_dose008, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/all_results_dose008.csv", row.names = FALSE)
-write.csv(sig_results_FDR005_dose008, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/sig_results_FDR005_dose008.csv", row.names = FALSE)
+write.csv(all_results_dose008, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/all_results_dose008.csv", row.names = FALSE)
+write.csv(sig_results_FDR005_dose008, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/sig_results_FDR005_dose008.csv", row.names = FALSE)
 
 
 
@@ -130,8 +130,8 @@ all_results_dose2 <- as.data.frame(topTags(qlf_dose2, n=nrow(qlf_dose2)))
 sig_results_FDR005_dose2 <- all_results_dose2[all_results_dose2$FDR<0.05,]
 
 # Save the DE results as CSV file
-write.csv(all_results_dose2, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/all_results_dose2.csv", row.names = FALSE)
-write.csv(sig_results_FDR005_dose2, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/sig_results_FDR005_dose2.csv", row.names = FALSE)
+write.csv(all_results_dose2, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/all_results_dose2.csv", row.names = FALSE)
+write.csv(sig_results_FDR005_dose2, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/sig_results_FDR005_dose2.csv", row.names = FALSE)
 
 
 
@@ -147,13 +147,13 @@ all_results_dose24 <- as.data.frame(topTags(qlf_dose24, n=nrow(qlf_dose24)))
 sig_results_FDR005_dose24 <- all_results_dose24[all_results_dose24$FDR<0.05,]
 
 # Save the DE results as CSV file
-write.csv(all_results_dose24, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/all_results_dose24.csv", row.names = FALSE)
-write.csv(sig_results_FDR005_dose24, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/sig_results_FDR005_dose24.csv", row.names = FALSE)
+write.csv(all_results_dose24, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/all_results_dose24.csv", row.names = FALSE)
+write.csv(sig_results_FDR005_dose24, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/sig_results_FDR005_dose24.csv", row.names = FALSE)
 
 # Save DE object for MA plot
 saveRDS(
   all_results_dose24,
-  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/all_results_dose24.rds"
+  "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/all_results_dose24.rds"
 )
 
 

@@ -3,7 +3,7 @@ library(dplyr)
 library(readr)
 
 # Directory containing per-sample read count files
-indir_all_counts <- "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/05_read_quantification"
+indir_all_counts <- "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/05_read_quantification"
 
 # Get paths to per-sample read count CSV files
 infile_path_list <- list.files(path = indir_all_counts, pattern = "\\_trimmed_count_matrix.csv$", full.names = TRUE)
@@ -66,7 +66,7 @@ count_matrix <- count_matrix[rowSums(count_matrix[,-1]) > 0, ] # excludes miRNA 
 edgeR_count_matrix <- count_matrix
 
 # Save the count matrix as tab-separated TXT file
-write_tsv(edgeR_count_matrix, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/06_create_count_matrix/edgeR_count_matrix.txt")
+write_tsv(edgeR_count_matrix, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/06_create_count_matrix/edgeR_count_matrix.txt")
 
 
 
@@ -82,7 +82,7 @@ rownames(deseq2_count_matrix) <- deseq2_count_matrix[,1]
 deseq2_count_matrix[,1] <- NULL
 
 # Save the count matrix as CSV file
-write.csv(deseq2_count_matrix, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/06_create_count_matrix/deseq2_count_matrix.csv", row.names=TRUE)
+write.csv(deseq2_count_matrix, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/06_create_count_matrix/deseq2_count_matrix.csv", row.names=TRUE)
 
 
 
