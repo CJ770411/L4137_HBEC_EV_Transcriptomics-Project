@@ -42,8 +42,8 @@
 #SBATCH --mem=16G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
 #SBATCH --job-name=05_read_quantification                             # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_01/05_read_quantification/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_01/05_read_quantification/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --output=../../logs/analysis_pipeline/run_03/05_read_quantification/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/analysis_pipeline/run_03/05_read_quantification/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 #SBATCH --array=0-14                                   # One job per sample (15 samples)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
@@ -64,7 +64,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_01/05_read_quantification")
+LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_03/05_read_quantification")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -179,7 +179,7 @@ echo "==> Setting input directories: Finished" >> "$LOG"
 echo "==> Setting input files" >> "$LOG"
 
 # Collapsed read files (outoput from mapper.pl) into an array for parallel analysis
-COLLAPSED_FILES="${PROJECT_ROOT}/results/analysis_pipeline/run_01/04_map_reads/mapper"
+COLLAPSED_FILES="${PROJECT_ROOT}/results/analysis_pipeline/run_03/04_map_reads/mapper"
 
 # Load collapsed reads into an array for parallel analysis
 mapfile -t COLLAPSED_FILES_ARRAY < <(find "$COLLAPSED_FILES" -name "*_collapsed.fasta" | sort)
@@ -221,10 +221,10 @@ echo "==> Setting output directories" >> "$LOG"
 
 # Directory for quantifier.pl outputs
 #       Distinct directory for each sample analysed
-OUTDIR_SAMPLE="${PROJECT_ROOT}/results/analysis_pipeline/run_01/05_read_quantification/${SAMPLE_NAME}"
+OUTDIR_SAMPLE="${PROJECT_ROOT}/results/analysis_pipeline/run_03/05_read_quantification/${SAMPLE_NAME}"
 
 #       Directory containing only count matrices for all samples
-OUTDIR_ALL_SAMPLES="${PROJECT_ROOT}/results/analysis_pipeline/run_01/05_read_quantification/all_samples"
+OUTDIR_ALL_SAMPLES="${PROJECT_ROOT}/results/analysis_pipeline/run_03/05_read_quantification/all_samples"
 
 # Combine directories into array for simultaenous creation later
 DIR_LIST=("$OUTDIR_SAMPLE" "$OUTDIR_ALL_SAMPLES")

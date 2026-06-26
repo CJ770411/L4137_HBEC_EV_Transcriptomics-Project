@@ -2,24 +2,24 @@
 
 
 #==============================================================================#
-# Script Name: 03_download_mirna_references.sh
+# Script Name: 02_reads_qc.sh
 #
-# Last updated: 13/05/2026 (dd/mm/yyyy)
+# Last updated: 11/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   - Download reference files necessary to create bowtie index and perform alignment. 
-#     References to download:
-#       2. (miRBase) Mature miRNA sequences
-#       3. (miRBase) Hairpin miRNA sequences
-#   - Clean up raw reference files for compatability with downstream software.
-#   - Extract only Homo sapiens data from miRBase files.
+#   - Perform quality control (QC) testing of trimmed FASTQ files.
+#   - Examine various quality metrics per sample.
+#   - Compile QC results for all samples into one report.
 #
 # Usage:
+# Usage:
 #   Execute from script directory using:
-#     sbatch 03_download_mirna_references.sh
+#     sbatch 02_reads_qc.sh
 #
 # Software:
-#   miRDeep2 v2.0.1.3
+#   FastQC v0.12.1
+#   miRTrace v1.0.1
+#   MultiQC v1.34
 #
 # VERSION: 1.0
 #
@@ -40,15 +40,15 @@
 #   SLURM Submission: Defines the SLRUM parameters required to execute
 #                     all steps of this script
 
-#SBATCH --partition=defq                          # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
-#SBATCH --nodes=1                                      # Number of nodes
-#SBATCH --ntasks=1                                     # Number of tasks 
-#SBATCH --cpus-per-task=1                              # Number of cores
-#SBATCH --mem=8G                                       # Memory allocation ("M" = mb, "G" = gb)
-#SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=03_download_mirna_references                             # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_03/03_download_mirna_references/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_03/03_download_mirna_references/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --partition=defq                                                     # Edit for desired cluster: <cluster> = "defq", "shortq" (example names)
+#SBATCH --nodes=1                                                            # Number of nodes
+#SBATCH --ntasks=1                                                           # Number of tasks 
+#SBATCH --cpus-per-task=4                                                    # Number of cores
+#SBATCH --mem=32G                                                            # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --time=02:00:00                                                      # Run time limit (hh:mm:ss)
+#SBATCH --job-name=02_reads_qc                                       # Name assigned to job allocation
+#SBATCH --output=../../logs/analysis_pipeline/run_02/02_reads_qc/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/analysis_pipeline/run_02/02_reads_qc/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -60,7 +60,6 @@
 set -eo pipefail
 
 
-
 #==========================#
 # LOG HANDLING
 #==========================#
@@ -68,7 +67,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_03/03_download_mirna_references")
+LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_02/02_reads_qc")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -78,10 +77,11 @@ mkdir -p "${LOG_DIR}"
 LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}.log" 
 
 
+
 # Script initialisation message
 echo "<------------------------------------------------------->" >> "$LOG"
 echo "Initialising script: $SLURM_JOB_NAME.sh" >> "$LOG"
-echo "Date initialised:" "$(date)" >> "$LOG"
+echo "Date initialised" "$(date)" >> "$LOG"
 
 
 #==========================#
@@ -122,7 +122,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease_mirdeep2"
+CONDA_ENV="L4137_01_Protease"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -136,7 +136,7 @@ else
     exit 1
 fi
 conda activate "$CONDA_ENV"
-echo "Conda Environment: " "$CONDA_ENV" >> "$LOG"
+echo "Conda Envrionment: " "$CONDA_ENV" >> "$LOG"
 
 # Completion message
 echo "==> Setting up environment: Finished" >> "$LOG"
@@ -167,8 +167,16 @@ timestamp() {
 # Initiation message
 echo "==> Setting input files" >> "$LOG"
 
-# No input files required
-echo "No input files required" >> "$LOG"
+# All FASTQ files containing the NGS sequencing output as array
+RAW_READS=(${PROJECT_ROOT}/data/raw/*fastq.gz)
+TRIMMED_READS=("${PROJECT_ROOT}"/results/analysis_pipeline/run_02/01_raw_read_trimming/cutadapt/*.fastq.gz) 
+echo "Input file(s):" >> "$LOG"
+
+echo "Raw read file(s):" >> "$LOG"
+echo "${RAW_READS[@]}" >> "$LOG"
+
+echo "Trimmed read file(s):" >> "$LOG"
+echo "${TRIMMED_READS[@]}" >> "$LOG"
 
 # Completion message
 echo "==> Setting input files: Finished" >> "$LOG"
@@ -178,8 +186,14 @@ echo "==> Setting input files: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting input directories" >> "$LOG"
 
-# No input directories required
-echo "No input directories required" >> "$LOG"
+# Parent directory of all QC reports for individual samples from:
+# 1. FastQC
+# 2. miRTrace
+INDIR_SAMPLE_REPORTS_RAW="${PROJECT_ROOT}"/results/analysis_pipeline/run_02/02_reads_qc/raw
+INDIR_SAMPLE_REPORTS_TRIMMED="${PROJECT_ROOT}"/results/analysis_pipeline/run_02/02_reads_qc/trimmed
+echo "Input directory:" >> "$LOG"
+echo "${INDIR_SAMPLE_REPORTS_RAW}" >> $LOG
+echo "${INDIR_SAMPLE_REPORTS_TRIMMED}" >> $LOG
 
 # Completion message
 echo "==> Setting input directories: Finished" >> "$LOG"
@@ -207,11 +221,13 @@ echo "==> Setting output files: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting output directories" >> "$LOG"
 
-# Directories for reference data files
-OUTDIR_MIRNA="${PROJECT_ROOT}/data/reference/miRNA"
+# Directory for all output quality reports
+OUTDIR_RAW="${PROJECT_ROOT}/results/analysis_pipeline/run_02/02_reads_qc/raw"
+OUTDIR_TRIMMED="${PROJECT_ROOT}/results/analysis_pipeline/run_02/02_reads_qc/trimmed"
+
 
 # Combine directories into array for simultaenous creation later
-DIR_LIST=("$OUTDIR_MIRNA/mature" "$OUTDIR_MIRNA/hairpin")
+DIR_LIST=("$OUTDIR_RAW" "$OUTDIR_TRIMMED")
 echo "Output directories required:" >> "$LOG"
 echo "${DIR_LIST[@]}" >> $LOG
 
@@ -235,10 +251,10 @@ echo "==> Verifying/creating output directories" >> "$LOG"
 #   3) Prints completion message defining action taken
 for directory in "${DIR_LIST[@]}"; do
     if [ -d "${directory}" ]; then
-        echo "Directory exists:" "${directory}" >> "$LOG"
+        echo "Directory exists: " "${directory}" >> "$LOG"
     else
         mkdir -p "${directory}"
-        echo "Directory created:" "${directory}" >> "$LOG"
+        echo "Directory created: " "${directory}" >> "$LOG"
     fi
 done
 
@@ -255,7 +271,6 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 # Initiation message
 echo "==> Setting parameters" >> "$LOG"
 
-
 # No specific configuration necessary
 echo "No user-defined configuration necessary" >> "$LOG"
 
@@ -268,42 +283,142 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 #   Main Script: Executes the main body of code which produces 
 #                the outputs of the script
 
+# Check if FASTQ files exist
+# Exit status 1 if files not found
+if [ ${#TRIMMED_READS[@]} -eq 0 ]; then
+    echo "Error: No FASTQ files found in ${PROJECT_ROOT}/data/raw/"
+    echo "Execute 01_data_preparation then re-run this script"
+    exit 1
+fi
 
-# Define the types of miRNA to be downloaded from miRBase
-MIRNA_LIST=("mature" "hairpin")
 
-# Download and clean miRNA reference files for 'mature' and 'hairpin'
-for mirna_form in "${MIRNA_LIST[@]}"; do
 
-    # Ensure output directory exists; if not, creates it
-    mkdir -p "${OUTDIR_MIRNA}/${mirna_form}"
+###==== FastQC ====###
 
-    # Navigate to reference directory
-    cd "${OUTDIR_MIRNA}/${mirna_form}"
+# Initiation message
+echo "$(timestamp)" "==> Initiating FastQC" >> "$LOG"
 
-    # Initiation message
-    echo "$(timestamp)" "==> Downloading $mirna_form miRNA sequences (all species) from miRBase" >> "$LOG"
 
-    # Download FASTA reference file (not zipped)
-    wget https://www.mirbase.org/download/${mirna_form}.fa
 
-    # Extract Homo sapiens (hsa) miRNA sequences
-    awk '/^>/ {keep = ($0 ~ /hsa/)} keep' ${mirna_form}.fa > ${mirna_form}_hsa_inc_whitespace.fa
+# RAW reads
+# Create raw directory
+mkdir -p "$OUTDIR_RAW"/fastqc
 
-    # Remove white-space from FASTA file for downstream compatbility with miRDeep2 (alignment software)
-    remove_white_space_in_id.pl ${mirna_form}_hsa_inc_whitespace.fa > ${mirna_form}_hsa_excl_whitespace.fa
+# Run FastQC to generate QC reports
+fastqc \
+"${RAW_READS[@]}" \
+-o "$OUTDIR_RAW"/fastqc \
+-t $SLURM_CPUS_PER_TASK
 
-    # Completion message
-    echo "$(timestamp)" "==> Finished downloading $mirna_form miRNA sequences (all species) from miRBase" >> "$LOG"
 
-done
+# TRIMMED reads
+# Create trimmed directory
+mkdir -p "$OUTDIR_TRIMMED"/fastqc
 
+# Run FastQC to generate QC reports
+fastqc \
+"${TRIMMED_READS[@]}" \
+-o "$OUTDIR_TRIMMED"/fastqc \
+-t $SLURM_CPUS_PER_TASK
+
+
+# Completion message
+echo "$(timestamp)" "==> FastQC Finished" >> "$LOG"
+
+
+
+###==== miRTrace ====###
+
+# Initiation message
+echo "$(timestamp)" "==> Initiating miRTrace" >> "$LOG"
+
+# RAW reads
+# Create raw directories
+mkdir -p "$OUTDIR_RAW"/mirtrace/trace
+mkdir -p "$OUTDIR_RAW"/mirtrace/qc
+
+# Run miRTrace to generate trace QC reports
+mirtrace \
+trace \
+-o "$OUTDIR_RAW"/mirtrace/trace \
+-f \
+-t $SLURM_CPUS_PER_TASK \
+"${RAW_READS[@]}" 
+
+# Run miRTrace to generate QC reports
+mirtrace \
+qc \
+-s hsa \
+-o "$OUTDIR_RAW"/mirtrace/qc \
+-f \
+-t $SLURM_CPUS_PER_TASK \
+"${RAW_READS[@]}" 
+
+
+# TRIMMED reads
+# Create raw directories
+mkdir -p "$OUTDIR_TRIMMED"/mirtrace/trace
+mkdir -p "$OUTDIR_TRIMMED"/mirtrace/qc
+
+
+# Run miRTrace to generate trace QC reports
+mirtrace \
+trace \
+-o "$OUTDIR_TRIMMED"/mirtrace/trace \
+-f \
+-t $SLURM_CPUS_PER_TASK \
+"${TRIMMED_READS[@]}" 
+
+# Run miRTrace to generate QC reports
+mirtrace \
+qc \
+-s hsa \
+-o "$OUTDIR_TRIMMED"/mirtrace/qc \
+-f \
+-t $SLURM_CPUS_PER_TASK \
+"${TRIMMED_READS[@]}" 
+
+
+
+# Completion message
+echo "$(timestamp)" "==> miRTrace Finished" >> "$LOG"
+
+
+
+###==== MultiQC ====###
+
+# Initiation message
+echo "$(timestamp)" "==> Initiating MultiQC" >> "$LOG"
+
+# RAW reads
+# Create raw directory
+mkdir -p "$OUTDIR_RAW"/multiqc
+
+# Run MultiQC to merge all individual sample QC reports into one report
+multiqc \
+-o "$OUTDIR_RAW"/multiqc \
+"$INDIR_SAMPLE_REPORTS_RAW"
+
+
+# TRIMMED reads
+# Create raw directory
+mkdir -p "$OUTDIR_TRIMMED"/multiqc
+
+# Run MultiQC to merge all individual sample QC reports into one report
+multiqc \
+-o "$OUTDIR_TRIMMED"/multiqc \
+"$INDIR_SAMPLE_REPORTS_TRIMMED"
+
+
+
+# Completion message
+echo "$(timestamp)" "==> MultiQC Finished" >> "$LOG"
 
 
 
 # Script completion message
 echo "Completed script: $SLURM_JOB_NAME.sh"  >> "$LOG"
-echo "Date completed:" "$(date)" >> "$LOG"
+echo "Date completed" "$(date)" >> "$LOG"
 echo "<------------------------------------------------------->" >> "$LOG"
 
 #==============================================================================#

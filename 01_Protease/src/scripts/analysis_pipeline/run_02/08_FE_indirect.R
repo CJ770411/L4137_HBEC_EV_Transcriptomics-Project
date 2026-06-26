@@ -18,12 +18,12 @@ logFC_threshold <- 1 # miRNA expression threshold
 #==========================#
 
 # Read in count matrix containing all contrasts
-count_matrix <- read_tsv("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_03/06_create_count_matrix/edgeR_count_matrix.txt")
+count_matrix <- read_tsv("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/06_create_count_matrix/edgeR_count_matrix.txt")
 
 # Isolate reads from Dose 24 vs Control
 dose24_data  <- count_matrix %>% dplyr::select(Symbol,
-                                               Control__1, Control__2, Control__3, 
-                                               Dose24__1, Dose24__2, Dose24__3)
+                                        Control__1, Control__2, Control__3, 
+                                        Dose24__1, Dose24__2, Dose24__3)
 
 
 # Remove rows with 0 counts
@@ -44,7 +44,7 @@ target_results_background_unique <- unique(target_results_background@data$target
 #==========================#
 
 # Read in signficant results from dose 24 vs control
-dose24_data <- read_csv("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_03/07_DE_analysis/sig_results_FDR005_dose24.csv")
+dose24_data <- read_csv("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_01/07_DE_analysis/sig_results_FDR005_dose24.csv")
 
 # Extract significant UP- and DOWN-regulated miRNAs
 dose24_data_sig_up <- dose24_data %>% filter(logFC > logFC_threshold) # Upregulated

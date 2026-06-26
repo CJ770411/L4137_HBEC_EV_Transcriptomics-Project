@@ -42,8 +42,8 @@
 #SBATCH --mem=20G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
 #SBATCH --job-name=04_map_reads                             # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_01/04_map_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_01/04_map_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --output=../../logs/analysis_pipeline/run_03/04_map_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/analysis_pipeline/run_03/04_map_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 #SBATCH --array=0-14                                   # One job per sample (15 samples)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
@@ -64,7 +64,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_01/04_map_reads")
+LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_03/04_map_reads")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -167,7 +167,7 @@ echo "==> Setting input files" >> "$LOG"
 echo "Input file(s):" >> "$LOG"
 
 # Trimmed reads directory
-INDIR_TRIMMED_READS="${PROJECT_ROOT}/results/analysis_pipeline/run_01/01_raw_read_trimming/cutadapt"
+INDIR_TRIMMED_READS="${PROJECT_ROOT}/results/analysis_pipeline/run_03/01_raw_read_trimming/cutadapt"
 echo "$(timestamp)" "==> Directory containing trimmed reads: "$INDIR_TRIMMED_READS >> "$LOG"
 
 # Completion message
@@ -213,7 +213,7 @@ echo "==> Setting input files: Finished" >> "$LOG"
 echo "==> Setting output directories" >> "$LOG"
 
 # Outputs from alignment (mapper.pl)
-OUTDIR_MAP="${PROJECT_ROOT}/results/analysis_pipeline/run_01/04_map_reads/mapper"
+OUTDIR_MAP="${PROJECT_ROOT}/results/analysis_pipeline/run_03/04_map_reads/mapper"
 
 # Combine directories into array for simultaenous creation later
 DIR_LIST=("$OUTDIR_MAP")

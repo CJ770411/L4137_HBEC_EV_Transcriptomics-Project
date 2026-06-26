@@ -47,8 +47,8 @@
 #SBATCH --mem=8G                                       # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
 #SBATCH --job-name=03_download_mirna_references                             # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_03/03_download_mirna_references/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_03/03_download_mirna_references/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --output=../../logs/analysis_pipeline/run_02/03_download_mirna_references/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/analysis_pipeline/run_02/03_download_mirna_references/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -68,7 +68,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_03/03_download_mirna_references")
+LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_02/03_download_mirna_references")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"

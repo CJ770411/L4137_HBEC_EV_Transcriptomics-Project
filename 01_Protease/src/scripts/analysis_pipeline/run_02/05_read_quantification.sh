@@ -2,21 +2,16 @@
 
 
 #==============================================================================#
-# Script Name: 03_download_mirna_references.sh
+# Script Name: 05_read_quantification.sh
 #
-# Last updated: 13/05/2026 (dd/mm/yyyy)
+# Last updated: 18/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   - Download reference files necessary to create bowtie index and perform alignment. 
-#     References to download:
-#       2. (miRBase) Mature miRNA sequences
-#       3. (miRBase) Hairpin miRNA sequences
-#   - Clean up raw reference files for compatability with downstream software.
-#   - Extract only Homo sapiens data from miRBase files.
+#   []
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch 03_download_mirna_references.sh
+#     sbatch 05_read_quantification.sh
 #
 # Software:
 #   miRDeep2 v2.0.1.3
@@ -44,11 +39,12 @@
 #SBATCH --nodes=1                                      # Number of nodes
 #SBATCH --ntasks=1                                     # Number of tasks 
 #SBATCH --cpus-per-task=1                              # Number of cores
-#SBATCH --mem=8G                                       # Memory allocation ("M" = mb, "G" = gb)
+#SBATCH --mem=16G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=03_download_mirna_references                             # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_03/03_download_mirna_references/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_03/03_download_mirna_references/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --job-name=05_read_quantification                             # Name assigned to job allocation
+#SBATCH --output=../../logs/analysis_pipeline/run_02/05_read_quantification/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/analysis_pipeline/run_02/05_read_quantification/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --array=0-14                                   # One job per sample (15 samples)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -68,20 +64,19 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_03/03_download_mirna_references")
+LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_02/05_read_quantification")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
 
 # Define unique log file
 #    File name: contains script execution-specific information and date executed
-LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}.log" 
-
+LOG="${LOG_DIR}/$(date '+%y-%m-%d')_slurm-${SLURM_JOB_NAME}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.log" 
 
 # Script initialisation message
 echo "<------------------------------------------------------->" >> "$LOG"
 echo "Initialising script: $SLURM_JOB_NAME.sh" >> "$LOG"
-echo "Date initialised:" "$(date)" >> "$LOG"
+echo "Date initialised" "$(date)" >> "$LOG"
 
 
 #==========================#
@@ -136,7 +131,7 @@ else
     exit 1
 fi
 conda activate "$CONDA_ENV"
-echo "Conda Environment: " "$CONDA_ENV" >> "$LOG"
+echo "Conda environment:" "$CONDA_ENV" >> "$LOG"
 
 # Completion message
 echo "==> Setting up environment: Finished" >> "$LOG"
@@ -163,15 +158,6 @@ timestamp() {
 #   Inputs: Contains all user-defined input files 
 #           and directories called within this script
 
-###==== Files ====###
-# Initiation message
-echo "==> Setting input files" >> "$LOG"
-
-# No input files required
-echo "No input files required" >> "$LOG"
-
-# Completion message
-echo "==> Setting input files: Finished" >> "$LOG"
 
 ###==== Directories ====###
 
@@ -181,8 +167,44 @@ echo "==> Setting input directories" >> "$LOG"
 # No input directories required
 echo "No input directories required" >> "$LOG"
 
+
 # Completion message
 echo "==> Setting input directories: Finished" >> "$LOG"
+
+
+
+
+###==== Files ====###
+# Initiation message
+echo "==> Setting input files" >> "$LOG"
+
+# Collapsed read files (outoput from mapper.pl) into an array for parallel analysis
+COLLAPSED_FILES="${PROJECT_ROOT}/results/analysis_pipeline/run_02/04_map_reads/mapper"
+
+# Load collapsed reads into an array for parallel analysis
+mapfile -t COLLAPSED_FILES_ARRAY < <(find "$COLLAPSED_FILES" -name "*_collapsed.fasta" | sort)
+
+# Identify sample based on SLURM_ARRAY_TASK_ID
+INFILE_COLLAPSED_READS="${COLLAPSED_FILES_ARRAY[$SLURM_ARRAY_TASK_ID]}"
+echo  "==> Sample file: "$INFILE_COLLAPSED_READS >> "$LOG"
+
+# Extract sample name
+SAMPLE_NAME=$(basename "$INFILE_COLLAPSED_READS" _collapsed.fasta)
+echo  "==> Sample name: "$SAMPLE_NAME >> "$LOG"
+
+# Mature miRNA FASTA file (miRBase)
+INFILE_MAT_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/mature/mature_hsa_excl_whitespace.fa"
+echo  "==> Mature miRNA: "$INFILE_MAT_MIRNA >> "$LOG"
+
+# Hairpin miRNA FASTA file (miRBase)
+INFILE_HAIR_MIRNA="${PROJECT_ROOT}/data/reference/miRNA/hairpin/hairpin_hsa_excl_whitespace.fa"
+echo  "==> Hairpin miRNA: "$INFILE_HAIR_MIRNA >> "$LOG"
+
+
+
+# Completion message
+echo "==> Setting input files: Finished" >> "$LOG"
+
 
 
 
@@ -191,6 +213,28 @@ echo "==> Setting input directories: Finished" >> "$LOG"
 #==========================#
 #   Outputs: Contains all user-defined output files 
 #            and directories called within this script
+
+
+###==== Directories ====###
+# Initiation message
+echo "==> Setting output directories" >> "$LOG"
+
+# Directory for quantifier.pl outputs
+#       Distinct directory for each sample analysed
+OUTDIR_SAMPLE="${PROJECT_ROOT}/results/analysis_pipeline/run_02/05_read_quantification/${SAMPLE_NAME}"
+
+#       Directory containing only count matrices for all samples
+OUTDIR_ALL_SAMPLES="${PROJECT_ROOT}/results/analysis_pipeline/run_02/05_read_quantification/all_samples"
+
+# Combine directories into array for simultaenous creation later
+DIR_LIST=("$OUTDIR_SAMPLE" "$OUTDIR_ALL_SAMPLES")
+echo "Output directories required:" >> "$LOG"
+echo "${DIR_LIST[@]}" >> $LOG
+
+# Completion message
+echo "==> Setting output directories: Finished" >> "$LOG"
+
+
 
 ###==== Files ====###
 # Initiation message
@@ -201,22 +245,6 @@ echo "No user-defined output files required" >> "$LOG"
 
 # Completion message
 echo "==> Setting output files: Finished" >> "$LOG"
-
-
-###==== Directories ====###
-# Initiation message
-echo "==> Setting output directories" >> "$LOG"
-
-# Directories for reference data files
-OUTDIR_MIRNA="${PROJECT_ROOT}/data/reference/miRNA"
-
-# Combine directories into array for simultaenous creation later
-DIR_LIST=("$OUTDIR_MIRNA/mature" "$OUTDIR_MIRNA/hairpin")
-echo "Output directories required:" >> "$LOG"
-echo "${DIR_LIST[@]}" >> $LOG
-
-# Completion message
-echo "==> Setting output directories: Finished" >> "$LOG"
 
 
 #==========================#
@@ -262,6 +290,8 @@ echo "No user-defined configuration necessary" >> "$LOG"
 # Completion message
 echo "==> Setting parameters: Finished" >> "$LOG"
 
+
+
 #==========================#
 # MAIN SCRIPT      
 #==========================#
@@ -269,41 +299,40 @@ echo "==> Setting parameters: Finished" >> "$LOG"
 #                the outputs of the script
 
 
-# Define the types of miRNA to be downloaded from miRBase
-MIRNA_LIST=("mature" "hairpin")
+# Initiation message
+echo "$(timestamp)" "==> Initiating miRDeep2 for" "$SAMPLE_NAME" >> "$LOG"
 
-# Download and clean miRNA reference files for 'mature' and 'hairpin'
-for mirna_form in "${MIRNA_LIST[@]}"; do
 
-    # Ensure output directory exists; if not, creates it
-    mkdir -p "${OUTDIR_MIRNA}/${mirna_form}"
+# Navigate to the unique sample output directory
+cd "$OUTDIR_SAMPLE"
 
-    # Navigate to reference directory
-    cd "${OUTDIR_MIRNA}/${mirna_form}"
+# Quantify read counts to produce count matrix
+quantifier.pl \
+-T $SLURM_CPUS_PER_TASK \
+-p "$INFILE_HAIR_MIRNA" \
+-m "$INFILE_MAT_MIRNA" \
+-r "$INFILE_COLLAPSED_READS" \
+-t hsa
 
-    # Initiation message
-    echo "$(timestamp)" "==> Downloading $mirna_form miRNA sequences (all species) from miRBase" >> "$LOG"
 
-    # Download FASTA reference file (not zipped)
-    wget https://www.mirbase.org/download/${mirna_form}.fa
 
-    # Extract Homo sapiens (hsa) miRNA sequences
-    awk '/^>/ {keep = ($0 ~ /hsa/)} keep' ${mirna_form}.fa > ${mirna_form}_hsa_inc_whitespace.fa
+# Identify mature miRNA count file
+#       Note: "all_samples" is default naming convention from miRDeep2.
+#              The file only contains data from one sample.
+COUNT_MATRIX=$(find ./ -name "miRNAs_expressed_all_samples_*.csv")
 
-    # Remove white-space from FASTA file for downstream compatbility with miRDeep2 (alignment software)
-    remove_white_space_in_id.pl ${mirna_form}_hsa_inc_whitespace.fa > ${mirna_form}_hsa_excl_whitespace.fa
+# Copy count matrix to directory containing all samples and re-name as sample name
+cp $COUNT_MATRIX "${OUTDIR_ALL_SAMPLES}"/${SAMPLE_NAME}_count_matrix.csv
 
-    # Completion message
-    echo "$(timestamp)" "==> Finished downloading $mirna_form miRNA sequences (all species) from miRBase" >> "$LOG"
 
-done
-
+# Completion message
+echo "$(timestamp)" "==> miRDeep2 Finished for" "$SAMPLE_NAME" >> "$LOG"
 
 
 
 # Script completion message
 echo "Completed script: $SLURM_JOB_NAME.sh"  >> "$LOG"
-echo "Date completed:" "$(date)" >> "$LOG"
+echo "Date completed" "$(date)" >> "$LOG"
 echo "<------------------------------------------------------->" >> "$LOG"
 
 #==============================================================================#

@@ -43,8 +43,8 @@
 #SBATCH --mem=32G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
 #SBATCH --job-name=01_raw_read_trimming                             # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_02/01_raw_read_trimming/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_02/01_raw_read_trimming/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --output=../../logs/analysis_pipeline/run_03/01_raw_read_trimming/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../logs/analysis_pipeline/run_03/01_raw_read_trimming/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -64,7 +64,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_02/01_raw_read_trimming")
+LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_03/01_raw_read_trimming")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -206,7 +206,7 @@ echo "==> Setting output files: Finished" >> "$LOG"
 echo "==> Setting output directories" >> "$LOG"
 
 # Directory for all output quality reports
-OUTDIR_CUTADAPT="${PROJECT_ROOT}/results/analysis_pipeline/run_02/01_raw_read_trimming/cutadapt"
+OUTDIR_CUTADAPT="${PROJECT_ROOT}/results/analysis_pipeline/run_03/01_raw_read_trimming/cutadapt"
 
 # Combine directories into array for simultaenous creation later
 DIR_LIST=("$OUTDIR_CUTADAPT")
