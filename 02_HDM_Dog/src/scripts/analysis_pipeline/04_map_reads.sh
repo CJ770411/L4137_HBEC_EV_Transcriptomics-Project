@@ -230,7 +230,7 @@ echo "==> Setting output directories: Finished" >> "$LOG"
 echo "==> Setting output files" >> "$LOG"
 
 COLLAPSED_READS="$OUTDIR_MAP/${SAMPLE_NAME}_collapsed.fasta"
-MAPPED_READS="$OUTDIR_MAP/${SAMPLE_NAME}_vs_genome_GRCh38.arf" 
+
 
 
 
@@ -276,7 +276,7 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 echo "==> Setting parameters" >> "$LOG"
 
 # Mapping filters:
-MIN_LENGTH=17
+MIN_LENGTH=18
 
 echo "Mapping Filters:" >> "$LOG" 
 echo "MIN_LENGTH=$MIN_LENGTH" >> "$LOG"  
@@ -300,7 +300,7 @@ TEMP_TRIMMED_FASTQ=$(basename "$SAMPLE_FILE" .gz)
 # Create temporary unzipped FASTQ file
 gunzip -c "$SAMPLE_FILE" > "$TEMP_TRIMMED_FASTQ"
 
-# Execute mapping
+# Collapse reads
 mapper.pl \
 "$TEMP_TRIMMED_FASTQ" \
 -e -h -j -m \
