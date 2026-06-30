@@ -12,8 +12,7 @@ library(ReactomePA)
 
 logFC_threshold <- 1 # miRNA expression threshold for ORA
 FDR_threshold <- 0.05 # FDR significance threshold for ORA
-
-
+set.seed(123) # Set random seed
 
 #==========================#
 # Identify Target Genes

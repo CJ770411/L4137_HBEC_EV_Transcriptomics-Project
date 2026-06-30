@@ -17,6 +17,7 @@ for (file in infile_path_list) {
   # Read count file
   data <- read_delim(file, delim = "\t", trim_ws = TRUE) %>%
     dplyr::group_by(`#miRNA`) %>%
+    
     # Get maximum mature miRNA count if multiple precursors
     dplyr::summarise(read_count = max(read_count), .groups = "drop") 
   

@@ -59,6 +59,7 @@ results/*
 src/*
 !src/scripts/
 01_Protease/results/*
+write_up/drafts/results/*
 
 # -----------------------------
 # Jupyter / IPython
