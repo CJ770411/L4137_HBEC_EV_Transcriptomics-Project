@@ -74,7 +74,7 @@ write_tsv(edgeR_count_matrix, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Pr
 ###==== DESeq2 Format ====###
 
 # Create DESeq2-specific count matrix
-deseq2_count_matrix <-as.data.frame(count_matrix)
+deseq2_count_matrix <- as.data.frame(count_matrix)
 
 # Set miRNA ID as row names
 rownames(deseq2_count_matrix) <- deseq2_count_matrix[,1]
