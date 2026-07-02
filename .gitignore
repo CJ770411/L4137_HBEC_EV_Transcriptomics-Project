@@ -59,6 +59,7 @@ results/*
 src/*
 !src/scripts/
 01_Protease/results/*
+02_HDM_Dog/results/*
 write_up/drafts/results/*
 
 # -----------------------------
@@ -75,3 +76,4 @@ write_up/drafts/results/*
 
 
 
+02_HDM_Dog/results/analysis_pipeline/run_02/05_read_quantification/NGS-110-014_S14_R1_001_trimmed_count_matrix.csv
