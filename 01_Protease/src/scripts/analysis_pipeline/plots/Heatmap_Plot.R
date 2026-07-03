@@ -61,7 +61,7 @@ pheatmap(
   clustering_distance_rows = "correlation",
   clustering_distance_cols = "correlation",
   clustering_method = "average",
-  show_rownames = FALSE,
+  show_rownames = TRUE,
   fontsize_col = 13,
   border_color = NA,
   color = heatmap_colours

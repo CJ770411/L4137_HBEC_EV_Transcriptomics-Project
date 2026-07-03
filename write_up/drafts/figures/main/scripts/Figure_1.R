@@ -86,6 +86,9 @@ mean_mirna_content_protease_treated <- mirtrace_data_protease %>%
                        primary_dose_24)) %>%
   summarise(round(mean(miRNA)))
 
+mean_mirna_content_protease_all <- mirtrace_data_protease %>%
+  summarise(round(mean(miRNA)))
+
 
 
 # Calculate mean values (HDM_Dog)
@@ -100,6 +103,9 @@ mean_mirna_content_hdm_dog_treated <- mirtrace_data_hdm_dog %>%
                        calu3_poly_IC)) %>%
   summarise(round(mean(miRNA)))
 
+mean_mirna_content_hdm_dog_all <- mirtrace_data_hdm_dog %>%
+  summarise(round(mean(miRNA)))
+
 
 
 # Print mean values
@@ -112,6 +118,11 @@ print(paste("Mean miRNA content in Protease - UNTREATED:",
             mean_mirna_content_protease_untreated))
 print(paste("Mean miRNA content in Protease - TREATED:",
             mean_mirna_content_protease_treated))
+
+print(paste("Mean miRNA content in Protease - ALL SAMPLES:",
+            mean_mirna_content_protease_all))
+print(paste("Mean miRNA content in HDM_Dog - ALL SAMPLES:",
+            mean_mirna_content_hdm_dog_all))
 
 
 
