@@ -61,6 +61,8 @@ src/*
 01_Protease/results/*
 02_HDM_Dog/results/*
 write_up/drafts/results/*
+write_up/drafts/figures/main/*
+write_up/drafts/figures/supplementary/*
 
 # -----------------------------
 # Jupyter / IPython

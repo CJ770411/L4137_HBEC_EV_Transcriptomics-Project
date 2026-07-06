@@ -81,8 +81,8 @@ saveRDS(
 # Differential Expression      
 #==========================#
 
-# [] need to use this threshold
 logFC_threshold <- 1 # miRNA expression threshold
+
 
 ###==== Dose: 0.005 ====###
 
@@ -93,7 +93,7 @@ qlf_dose0005 <- glmQLFTest(fit, coef="groupDose_0_005")
 all_results_dose0005 <- as.data.frame(topTags(qlf_dose0005, n=nrow(qlf_dose0005)))
 
 # Extract significant results 
-sig_results_FDR005_dose0005 <- all_results_dose0005[all_results_dose0005$FDR<0.05,]
+sig_results_FDR005_dose0005 <- all_results_dose0005[all_results_dose0005$FDR<0.05 & abs(all_results_dose0005$logFC) > logFC_threshold,]
 
 # Save the DE results as CSV file
 write.csv(all_results_dose0005, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/all_results_dose0005.csv", row.names = FALSE)
@@ -110,7 +110,7 @@ qlf_dose008 <- glmQLFTest(fit, coef="groupDose_0_08")
 all_results_dose008 <- as.data.frame(topTags(qlf_dose008, n=nrow(qlf_dose008)))
 
 # Extract significant results 
-sig_results_FDR005_dose008 <- all_results_dose008[all_results_dose008$FDR<0.05,]
+sig_results_FDR005_dose008 <- all_results_dose008[all_results_dose008$FDR<0.05 & abs(all_results_dose008$logFC) > logFC_threshold,]
 
 # Save the DE results as CSV file
 write.csv(all_results_dose008, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/all_results_dose008.csv", row.names = FALSE)
@@ -127,7 +127,7 @@ qlf_dose2 <- glmQLFTest(fit, coef="groupDose_2")
 all_results_dose2 <- as.data.frame(topTags(qlf_dose2, n=nrow(qlf_dose2)))
 
 # Extract significant results 
-sig_results_FDR005_dose2 <- all_results_dose2[all_results_dose2$FDR<0.05,]
+sig_results_FDR005_dose2 <- all_results_dose2[all_results_dose2$FDR<0.05 & abs(all_results_dose2$logFC) > logFC_threshold,]
 
 # Save the DE results as CSV file
 write.csv(all_results_dose2, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/all_results_dose2.csv", row.names = FALSE)
@@ -144,7 +144,7 @@ qlf_dose24 <- glmQLFTest(fit, coef="groupDose_24")
 all_results_dose24 <- as.data.frame(topTags(qlf_dose24, n=nrow(qlf_dose24)))
 
 # Extract significant results 
-sig_results_FDR005_dose24 <- all_results_dose24[all_results_dose24$FDR<0.05,]
+sig_results_FDR005_dose24 <- all_results_dose24[all_results_dose24$FDR<0.05 & abs(all_results_dose24$logFC) > logFC_threshold,]
 
 # Save the DE results as CSV file
 write.csv(all_results_dose24, "~/GIT/L4137_HBEC_EV_Transcriptomics-Project/01_Protease/results/analysis_pipeline/run_02/07_DE_analysis/all_results_dose24.csv", row.names = FALSE)
