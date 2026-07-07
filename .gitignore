@@ -45,6 +45,17 @@ venv/
 *.tmp
 *.swp   # Vim temporary files
 
+# -----------------------------
+# Jupyter / IPython
+# -----------------------------
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# JupyterLab config & workspaces
+.jupyter/
+**/.jupyter/desktop-workspaces/
+*.jupyterlab-workspace
+
 
 # -----------------------
 # Project
@@ -63,19 +74,3 @@ src/*
 write_up/drafts/results/*
 write_up/drafts/figures/main/*
 write_up/drafts/figures/supplementary/*
-
-# -----------------------------
-# Jupyter / IPython
-# -----------------------------
-.ipynb_checkpoints/
-**/.ipynb_checkpoints/
-
-# JupyterLab config & workspaces
-.jupyter/
-**/.jupyter/desktop-workspaces/
-*.jupyterlab-workspace
-
-
-
-
-02_HDM_Dog/results/analysis_pipeline/run_02/05_read_quantification/NGS-110-014_S14_R1_001_trimmed_count_matrix.csv
