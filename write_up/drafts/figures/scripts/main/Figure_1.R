@@ -221,7 +221,7 @@ boxplot_data_all <- rbind(mirna_prim_protease,
 
 
 # Plot boxplot
-ggplot(boxplot_data_protease, aes(x = Condition, y = miRNA, fill = Condition, alpha = 0.1)) +
+HDM_Dog_conditions_boxplot <- ggplot(boxplot_data_protease, aes(x = Condition, y = miRNA, fill = Condition, alpha = 0.1)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = "point", shape = 8,
                size = 2, color = "red") +
@@ -229,7 +229,7 @@ ggplot(boxplot_data_protease, aes(x = Condition, y = miRNA, fill = Condition, al
   theme_pubr(legend = 'right') +
   labs_pubr() 
 
-ggplot(boxplot_data_hdm_dog, aes(x = Condition, y = miRNA, fill = Condition, alpha = 0.1)) +
+protease_conditions_boxplot <- ggplot(boxplot_data_hdm_dog, aes(x = Condition, y = miRNA, fill = Condition, alpha = 0.1)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = "point", shape = 8,
                size = 2, color = "red") +
@@ -237,15 +237,22 @@ ggplot(boxplot_data_hdm_dog, aes(x = Condition, y = miRNA, fill = Condition, alp
   theme_pubr(legend = 'right') +
   labs_pubr() 
 
-ggplot(boxplot_data_all, aes(x = Condition, y = miRNA, fill = Condition, alpha = 0.1)) +
-  geom_boxplot() +
+primary_vs_calu3_boxplot <- ggplot(boxplot_data_all, aes(x = Condition, y = miRNA, fill = Condition)) +
+  geom_boxplot(alpha = 0.6) +
   stat_summary(fun = mean, geom = "point", shape = 8,
                size = 2, color = "red") +
   scale_fill_viridis_d() +
   theme_pubr(legend = 'right') +
-  labs_pubr() 
+  labs_pubr() +
+  labs(x = 'Experiment',
+       y = 'miRNA count')
 
-#[need to decide what the boxplot should actually show, e.g., untreated vs treated, contrasts or only two boxes with primary cells vs calu-3]
+# Save boxplots
+ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/panels/HDM_Dog_conditions_boxplot.svg", plot = HDM_Dog_conditions_boxplot, width=10, height=7, units='in')
+ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/panels/protease_conditions_boxplot.svg", plot = protease_conditions_boxplot, width=10, height=7, units='in')
+ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/panels/primary_vs_calu3_boxplot.svg", plot = primary_vs_calu3_boxplot, width=10, height=7, units='in')
+
+
 
 
 #==========================#
