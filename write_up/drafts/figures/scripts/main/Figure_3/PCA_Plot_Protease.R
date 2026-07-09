@@ -32,7 +32,6 @@ logCPM <- cpm(dge, log = TRUE, prior.count = 2)
 # Run PCA
 pca <- prcomp(t(logCPM), scale. = TRUE) # Transpose matrix 
 
-
 # Calculate variance explained
 var_explained <- (pca$sdev^2) / sum(pca$sdev^2) * 100
 
@@ -43,17 +42,6 @@ pca_data <- data.frame(
   PC1 = pca$x[,1],
   PC2 = pca$x[,2]
 )
-
-
-# Define PCA plot point colours
-pca_cols <- c(
-  "#E69F00",
-  "#56B4E9", 
-  "#009E73", 
-  "#D55E00", 
-  "#CC79A7"  
-)
-
 
 # Create PCA plot labels 
 pca_data <- pca_data %>%
@@ -66,6 +54,16 @@ pca_data <- pca_data %>%
          Sample_label = str_replace_all(Sample_label, " 3", "(3)"),
          Sample_label = str_replace_all(Sample_label, "Control", "Untreated")
          )
+
+
+# Define PCA plot point colours
+pca_cols <- c(
+  "#E69F00",
+  "#56B4E9", 
+  "#009E73", 
+  "#D55E00", 
+  "#CC79A7"  
+)
 
 
 # Create PCA plot
