@@ -49,8 +49,7 @@ pca_cols <- c(
   "#E69F00",
   "#56B4E9", 
   "#009E73", 
-  "#D55E00", 
-  "#CC79A7"  
+  "#D55E00"
 )
 
 
@@ -73,8 +72,7 @@ pca_plot <- ggplot(pca_data, aes(PC1, PC2, color=Group, label = Sample_label)) +
   scale_color_manual(labels = c('Unstimulated' = 'Untreated',
                                 'Der_p1_Active' = 'Der p1 Active',
                                 'Der_p1_Inactive' = 'Der p1 Inactive',
-                                'Can_F_1' = 'Can f 1',
-                                'Poly_IC' = 'Poly IC'),
+                                'Can_F_1' = 'Can f 1'),
                      values = pca_cols,
                      name = 'Condition') +
   geom_text_repel(box.padding = 0.9) +
