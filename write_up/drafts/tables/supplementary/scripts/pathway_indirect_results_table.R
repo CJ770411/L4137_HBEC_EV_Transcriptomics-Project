@@ -11,12 +11,10 @@ epath_down_results_table <- readRDS(
 
 # Filter results (Padj < 0.05; q < 0.02)
 epath_up_results_table_filtered <- epath_up_results_table %>% 
-  filter(p.adjust < 0.02,
-         qvalue < 0.02)
+  filter(p.adjust < 0.02)
 
 epath_down_results_table_filtered <- epath_down_results_table %>% 
-  filter(p.adjust < 0.02,
-         qvalue < 0.02)
+  filter(p.adjust < 0.02)
 
 
 # Save results tables as CSV
