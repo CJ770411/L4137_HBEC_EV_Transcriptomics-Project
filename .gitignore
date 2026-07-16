@@ -74,3 +74,5 @@ src/*
 write_up/drafts/results/*
 write_up/drafts/figures/main/*
 write_up/drafts/figures/supplementary/*
+
+*~$*.docx

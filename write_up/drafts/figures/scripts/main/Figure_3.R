@@ -248,9 +248,9 @@ primary_vs_calu3_boxplot <- ggplot(boxplot_data_all, aes(x = Condition, y = miRN
        y = 'miRNA count')
 
 # Save boxplots
-ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/panels/HDM_Dog_conditions_boxplot.svg", plot = HDM_Dog_conditions_boxplot, width=10, height=7, units='in')
-ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/panels/protease_conditions_boxplot.svg", plot = protease_conditions_boxplot, width=10, height=7, units='in')
-ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/panels/primary_vs_calu3_boxplot.svg", plot = primary_vs_calu3_boxplot, width=10, height=7, units='in')
+#ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/panels/HDM_Dog_conditions_boxplot.svg", plot = HDM_Dog_conditions_boxplot, width=10, height=7, units='in')
+#ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/panels/protease_conditions_boxplot.svg", plot = protease_conditions_boxplot, width=10, height=7, units='in')
+#ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/panels/primary_vs_calu3_boxplot.svg", plot = primary_vs_calu3_boxplot, width=10, height=7, units='in')
 
 
 
