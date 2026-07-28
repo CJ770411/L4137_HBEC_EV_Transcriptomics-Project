@@ -1,10 +1,11 @@
+# Load necessary libraries
 library(ggplot2)
 library(dplyr)
 library(readr)
 library(ggpubr)
 library(scales)
 library(patchwork)
-
+library(tidyr)
 
 #==========================#
 # Read-in Data
@@ -61,7 +62,7 @@ primaryHBEC_dose_24 <- c(
 #==========================#
 
 # Untreated
-calu3_control <- c(
+calu3_untreated <- c(
   "NGS-110-021_S21_R1_001",
   "NGS-110-018_S18_R1_001",
   "NGS-110-002_S2_R1_001"
@@ -216,7 +217,7 @@ print(primaryHBEC_mirna_boxplot)
 
 # Untreated
 mirna_reads_calu3_untreated <- mirtrace_data_Calu3 %>%
-  filter(Sample %in% calu3_control) %>%
+  filter(Sample %in% calu3_untreated) %>%
   mutate(Condition = 'Untreated') %>%
   select(miRNA, Sample, Condition)
 
@@ -298,11 +299,11 @@ mirtrace_data_primaryHBECs_percent_long <- mirtrace_data_primaryHBECs_percent %>
 # Set order of samples and RNA types in the plot
 mirtrace_data_primaryHBECs_percent_long <- mirtrace_data_primaryHBECs_percent_long %>%
   mutate(RNA_type = factor(RNA_type, levels = c('Unknown', 'Artifact', 'tRNA', 'rRNA', 'miRNA')), 
-         Sample = factor(Sample, levels = c(primaryHBEC_dose_24, 
-                                            primaryHBEC_dose_2,
-                                            primaryHBEC_dose_0_08,
+         Sample = factor(Sample, levels = c(primaryHBEC_untreated, 
                                             primaryHBEC_dose_0_005,
-                                            primaryHBEC_untreated)))
+                                            primaryHBEC_dose_0_08,
+                                            primaryHBEC_dose_2,
+                                            primaryHBEC_dose_24)))
 
 # Convert sample sequence ID to human-readable format
 mirtrace_data_primaryHBECs_percent_long <- mirtrace_data_primaryHBECs_percent_long %>%
@@ -333,20 +334,142 @@ mirtrace_data_primaryHBECs_percent_long <- mirtrace_data_primaryHBECs_percent_lo
 
 
 # Create bar chart
-ggplot(mirtrace_data_primaryHBECs_percent_long, aes(x = Percentage, y = Sample_Name, 
+primaryHBEC_rna_composition_plot <- ggplot(mirtrace_data_primaryHBECs_percent_long, aes(x = Percentage, y = Sample_Name, 
                                                     fill = RNA_type)) +
-         geom_bar(stat = 'identity')
+         geom_bar(stat = 'identity') +
+  labs(x = "Proportion of Library (%)",
+       y = "Sample",
+       fill = 'RNA Species') +
+  theme_pubclean() +
+  labs_pubr() +
+  theme(axis.title = element_text(size = 20),
+        legend.position = "right",
+        legend.title = element_text(face = "bold", size = 20),
+        legend.key.size = unit(0.5, 'cm'),
+        legend.text = element_text(size = 20),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_line(linewidth = 1),
+        axis.text = element_text(size = 15)) +
+  scale_fill_manual(
+    values = c(
+      "miRNA"    = "steelblue4",  
+      "rRNA"     = "orange2",  
+      "tRNA"     = "seagreen4",  
+      "Artifact" = "palevioletred3", 
+      "Unknown"  = "grey85"   
+    )) + 
+  guides(fill = guide_legend(reverse = TRUE))
 
 
-#[set axis name, legend name, background, standard pubr labels, try to reverse order that replicates appear in y axis, explain replicate number is in brackets in the figure legend]
-
-
-
-
+# Visualise plot
+print(primaryHBEC_rna_composition_plot)
 
 
 #==========================#
 # Panel E - RNA Composition Plot (Calu-3)
 #==========================#
 
-# [align so that the 3 boxplots are in a line then rna categories is stacked below each on a separate line]
+# Calculate library size to enable proportion calculations 
+mirtrace_data_Calu3 <- mirtrace_data_Calu3 %>%
+  mutate(Total = rowSums(mirtrace_data_Calu3[-1]))
+
+# Calculate proportion of each RNA type as percentages
+mirtrace_data_calu3_percent <- mirtrace_data_Calu3 %>%
+  mutate(
+    miRNA = miRNA / Total * 100,
+    rRNA = rRNA / Total * 100,
+    tRNA = tRNA / Total * 100,
+    Artifact = Artifact / Total * 100,
+    Unknown = Unknown / Total * 100
+  )
+
+# Convert data to long format
+mirtrace_data_calu3_percent_long <- mirtrace_data_calu3_percent %>%
+  pivot_longer(cols = c(-Sample, -Total),
+               names_to = 'RNA_type',
+               values_to = 'Percentage') 
+
+# Set order of samples and RNA types in the plot
+mirtrace_data_calu3_percent_long <- mirtrace_data_calu3_percent_long %>%
+  mutate(RNA_type = factor(RNA_type, levels = c('Unknown', 'Artifact', 'tRNA', 'rRNA', 'miRNA')), 
+         Sample = factor(Sample, levels = c(calu3_untreated, 
+                                            calu3_hdm_active,
+                                            calu3_hdm_inactive,
+                                            calu3_dog
+                                            )))
+
+# Convert sample sequence ID to human-readable format
+mirtrace_data_calu3_percent_long <- mirtrace_data_calu3_percent_long %>%
+  mutate(
+    Sample_Name = recode(
+      Sample,
+      "NGS-110-021_S21_R1_001" = "Untreated (1)",
+      "NGS-110-018_S18_R1_001" = "Untreated (2)",
+      "NGS-110-002_S2_R1_001" = "Untreated (3)",
+      
+      "NGS-110-027_S27_R1_001" = "Der p 1 - Active (1)",
+      "NGS-110-005_S5_R1_001" = "Der p 1 - Active (2)",
+      "NGS-110-023_S23_R1_001" = "Der p 1 - Active (3)",
+      
+      "NGS-110-020_S20_R1_001" = "Der p 1 - Inactive (1)",
+      "NGS-110-009_S9_R1_001" = "Der p 1 - Inactive (2)",
+      "NGS-110-001_S1_R1_001" = "Der p 1 - Inactive (3)",
+      
+      "NGS-110-024_S24_R1_001" = "Can f 1 (1)",
+      "NGS-110-015_S15_R1_001" = "Can f 1 (2)",
+      "NGS-110-013_S13_R1_001" = "Can f 1 (3)",
+    ))
+
+
+
+# Create bar chart
+calu3_rna_composition_plot <- ggplot(mirtrace_data_calu3_percent_long, aes(x = Percentage, y = Sample_Name, 
+                                                    fill = RNA_type)) +
+  geom_bar(stat = 'identity') +
+  labs(x = "Proportion of Library (%)",
+       y = "Sample",
+       fill = 'RNA Species') +
+  theme_pubclean() +
+  labs_pubr() +
+  theme(axis.title = element_text(size = 20),
+        legend.position = "right",
+        legend.title = element_text(face = "bold", size = 20),
+        legend.key.size = unit(0.5, 'cm'),
+        legend.text = element_text(size = 20),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_line(linewidth = 1),
+        axis.text = element_text(size = 15)) +
+  scale_fill_manual(
+    values = c(
+      "miRNA"    = "steelblue4",  
+      "rRNA"     = "orange2",  
+      "tRNA"     = "seagreen4",  
+      "Artifact" = "palevioletred3", 
+      "Unknown"  = "grey85"   
+    )) + 
+  guides(fill = guide_legend(reverse = TRUE))
+
+
+# Visualise plot
+print(calu3_rna_composition_plot)
+
+
+#==========================#
+# Combine Plot to Create Figure
+#==========================#
+
+# Combine plots
+figure_3 <- ((overall_mirna_boxplot | primaryHBEC_mirna_boxplot | calu3_mirna_boxplot) 
+             / primaryHBEC_rna_composition_plot / calu3_rna_composition_plot) +
+  plot_annotation(tag_levels = "A") &
+  theme(legend.position = "right",
+        legend.key.size = unit(1.2, "cm"),
+        plot.tag = element_text(size = 22, face = 'bold'))
+
+
+# Visualise figure
+print(figure_3)
+
+
+# Save figure
+ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_3/figure_3.pdf", plot = figure_3, height=9, width=14, dpi=600, units="in", scale=2)

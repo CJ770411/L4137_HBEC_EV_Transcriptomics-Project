@@ -1,3 +1,4 @@
+# Load necessary libraries
 library(ggplot2)
 library(dplyr)
 library(readr)
@@ -303,6 +304,6 @@ figure_2 <- (GC_plot / read_length_plot / duplication_plot) +
 print(figure_2)
 
 # Save figure
-ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/figure_2.png", height=7, width=6, dpi=300, units="in", scale=2)
+ggsave("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/write_up/drafts/figures/main/figure_2/figure_2.pdf", plot = figure_2, height=7, width=6, dpi=600, units="in", scale=2)
 
 
