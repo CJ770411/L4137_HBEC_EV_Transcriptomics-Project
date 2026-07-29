@@ -115,7 +115,8 @@ overall_mirna_boxplot <- ggplot(overall_mirna_boxplot_data, aes(x = Condition, y
                size = 2, color = "red") +
   scale_fill_viridis_d() +
   labs(x = 'Experiment',
-       y = 'miRNA-assigned Read Count') +
+       y = 'miRNA-assigned Read Count',
+       fill = 'Experiment') +
   theme_pubr() +
   labs_pubr() +
   theme(axis.title = element_text(size = 20),
@@ -338,18 +339,18 @@ primaryHBEC_rna_composition_plot <- ggplot(mirtrace_data_primaryHBECs_percent_lo
                                                     fill = RNA_type)) +
          geom_bar(stat = 'identity') +
   labs(x = "Proportion of Library (%)",
-       y = "Sample",
+       y = "Sample (primary HBEC)",
        fill = 'RNA Species') +
   theme_pubclean() +
   labs_pubr() +
-  theme(axis.title = element_text(size = 20),
+  theme(axis.title = element_text(size = 30),
         legend.position = "right",
-        legend.title = element_text(face = "bold", size = 20),
+        legend.title = element_text(face = "bold", size = 30),
         legend.key.size = unit(0.5, 'cm'),
-        legend.text = element_text(size = 20),
+        legend.text = element_text(size = 30),
         panel.grid.minor = element_blank(),
         axis.ticks = element_line(linewidth = 1),
-        axis.text = element_text(size = 15)) +
+        axis.text = element_text(size = 25)) +
   scale_fill_manual(
     values = c(
       "miRNA"    = "steelblue4",  
@@ -427,18 +428,18 @@ calu3_rna_composition_plot <- ggplot(mirtrace_data_calu3_percent_long, aes(x = P
                                                     fill = RNA_type)) +
   geom_bar(stat = 'identity') +
   labs(x = "Proportion of Library (%)",
-       y = "Sample",
+       y = "Sample (Calu-3)",
        fill = 'RNA Species') +
   theme_pubclean() +
   labs_pubr() +
-  theme(axis.title = element_text(size = 20),
+  theme(axis.title = element_text(size = 30),
         legend.position = "right",
-        legend.title = element_text(face = "bold", size = 20),
+        legend.title = element_text(face = "bold", size = 30),
         legend.key.size = unit(0.5, 'cm'),
-        legend.text = element_text(size = 20),
+        legend.text = element_text(size = 30),
         panel.grid.minor = element_blank(),
         axis.ticks = element_line(linewidth = 1),
-        axis.text = element_text(size = 15)) +
+        axis.text = element_text(size = 25)) +
   scale_fill_manual(
     values = c(
       "miRNA"    = "steelblue4",  

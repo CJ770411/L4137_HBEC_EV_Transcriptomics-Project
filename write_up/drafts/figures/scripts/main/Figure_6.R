@@ -19,7 +19,8 @@ dotplot_up <- dotplot(epath_up, showCategory = 30) +
   theme_cleveland() +
   scale_fill_viridis_c(option = "inferno") +
   labs(fill = 'P.adj',
-       size = 'Gene Count') +
+       size = 'Gene Count',
+       title = 'Upregulated') +
   guides(
     fill = guide_colorbar(order = 1),
     size = guide_legend(order = 2)) +
@@ -53,7 +54,8 @@ dotplot_down <- dotplot(epath_down, showCategory = 30) +
   theme_cleveland() +
   scale_fill_viridis_c(option = "inferno") +
   labs(fill = 'P.adj',
-       size = 'Gene Count') +
+       size = 'Gene Count',
+       title = 'Downregulated') +
   guides(
     fill = guide_colorbar(order = 1),
     size = guide_legend(order = 2)) +

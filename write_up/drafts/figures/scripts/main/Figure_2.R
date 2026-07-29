@@ -247,8 +247,8 @@ multiqc_sequence_duplication_data_long <- multiqc_sequence_duplication_data_long
 duplication_plot <- ggplot(multiqc_sequence_duplication_data_long, aes(x = factor(Duplication_level, level = colnames(multiqc_sequence_duplication_data)), 
                                                                        y = Percentage, group = Sample, colour = Condition, alpha = Condition)) +
   geom_line(linewidth = 1) +
-  labs(x = "Proportion of Library (%)",
-       y = "Sequence Duplication Level") +
+  labs(x = "Sequence Duplication Level",
+       y = "Proportion of Library (%)") +
   theme_pubclean() +
   labs_pubr() +
   theme(axis.title = element_text(size = 20),
