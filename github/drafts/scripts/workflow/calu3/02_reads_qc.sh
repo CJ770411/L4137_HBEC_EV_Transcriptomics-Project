@@ -47,8 +47,8 @@
 #SBATCH --mem=32G                                                            # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=02:00:00                                                      # Run time limit (hh:mm:ss)
 #SBATCH --job-name=02_reads_qc                                       # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_03/02_reads_qc/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_03/02_reads_qc/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --output=../../../logs/calu3/02_reads_qc/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../../logs/calu3/02_reads_qc/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -67,7 +67,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_03/02_reads_qc")
+LOG_DIR=$(realpath "../../../logs/calu3/02_reads_qc")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -93,15 +93,15 @@ echo "Date initialised" "$(date)" >> "$LOG"
 # Initiation message
 echo "==> Setting up in-script navigation" >> "$LOG"
 
-#   1. Set project root (2 levels above script directory)
-PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../..")" 
+#   1. Set project root (3 levels above script directory)
+PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../../..")" 
 echo "Project Root: $PROJECT_ROOT" >> "$LOG"
 
-#   2. Define this script
-SCRIPT=${PROJECT_ROOT}/scripts/analysis_pipeline/${SLURM_JOB_NAME}.sh
+#   3. Define this script
+SCRIPT=${PROJECT_ROOT}/scripts/workflow/calu3/${SLURM_JOB_NAME}.sh
 echo "Script Name: $SLURM_JOB_NAME.sh" >> "$LOG"
 
-#   3. Ensure script is called from directory containing script
+#   4. Ensure script is called from directory containing script
 #      Exit status 1 if script not found
 if [ ! -f $SCRIPT ]; then
    echo "Error: script must be called from the directory containing $SLURM_JOB_NAME.sh" >&2
@@ -122,7 +122,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease"
+CONDA_ENV="L4137"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -167,8 +167,8 @@ timestamp() {
 echo "==> Setting input files" >> "$LOG"
 
 # All FASTQ files containing the NGS sequencing output as array
-RAW_READS=(${PROJECT_ROOT}/data/raw/*fastq.gz)
-TRIMMED_READS=("${PROJECT_ROOT}"/results/analysis_pipeline/run_03/01_raw_read_trimming/cutadapt/*.fastq.gz) 
+RAW_READS=(${PROJECT_ROOT}/test_data/calu3/*fastq.gz)
+TRIMMED_READS=("${PROJECT_ROOT}"/results/calu3/01_raw_read_trimming/*.fastq.gz) 
 echo "Input file(s):" >> "$LOG"
 
 echo "Raw read file(s):" >> "$LOG"
@@ -188,8 +188,8 @@ echo "==> Setting input directories" >> "$LOG"
 # Parent directory of all QC reports for individual samples from:
 # 1. FastQC
 # 2. miRTrace
-INDIR_SAMPLE_REPORTS_RAW="${PROJECT_ROOT}"/results/analysis_pipeline/run_03/02_reads_qc/raw
-INDIR_SAMPLE_REPORTS_TRIMMED="${PROJECT_ROOT}"/results/analysis_pipeline/run_03/02_reads_qc/trimmed
+INDIR_SAMPLE_REPORTS_RAW="${PROJECT_ROOT}"/results/calu3/02_reads_qc/raw
+INDIR_SAMPLE_REPORTS_TRIMMED="${PROJECT_ROOT}"/results/calu3/02_reads_qc/trimmed
 echo "Input directory:" >> "$LOG"
 echo "${INDIR_SAMPLE_REPORTS_RAW}" >> $LOG
 echo "${INDIR_SAMPLE_REPORTS_TRIMMED}" >> $LOG
@@ -221,8 +221,8 @@ echo "==> Setting output files: Finished" >> "$LOG"
 echo "==> Setting output directories" >> "$LOG"
 
 # Directory for all output quality reports
-OUTDIR_RAW="${PROJECT_ROOT}/results/analysis_pipeline/run_03/02_reads_qc/raw"
-OUTDIR_TRIMMED="${PROJECT_ROOT}/results/analysis_pipeline/run_03/02_reads_qc/trimmed"
+OUTDIR_RAW="${PROJECT_ROOT}/results/calu3/02_reads_qc/raw"
+OUTDIR_TRIMMED="${PROJECT_ROOT}/results/calu3/02_reads_qc/trimmed"
 
 
 # Combine directories into array for simultaenous creation later
@@ -232,6 +232,7 @@ echo "${DIR_LIST[@]}" >> $LOG
 
 # Completion message
 echo "==> Setting output directories: Finished" >> "$LOG"
+
 
 
 #==========================#
@@ -261,6 +262,7 @@ done
 echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 
 
+
 #==========================#
 # CONFIGURATION      
 #==========================#
@@ -275,6 +277,8 @@ echo "No user-defined configuration necessary" >> "$LOG"
 
 # Completion message
 echo "==> Setting parameters: Finished" >> "$LOG"
+
+
 
 #==========================#
 # MAIN SCRIPT      

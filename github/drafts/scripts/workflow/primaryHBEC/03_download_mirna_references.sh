@@ -93,7 +93,7 @@ echo "Date initialised:" "$(date)" >> "$LOG"
 # Initiation message
 echo "==> Setting up in-script navigation" >> "$LOG"
 
-#   1. Set project root (2 levels above script directory)
+#   1. Set project root (3 levels above script directory)
 PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../../..")" 
 echo "Project Root: $PROJECT_ROOT" >> "$LOG"
 
@@ -122,7 +122,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease_mirdeep2"
+CONDA_ENV="L4137_mirdeep2"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)

@@ -1,16 +1,4 @@
 # Load necessary libraries
-library(dplyr)
-library(readr)
-
-# Directory containing per-sample read count files
-indir_all_counts <- "../../../results/primaryHBEC/05_read_quantification"
-
-# Get paths to per-sample read count CSV files
-infile_path_list <- list.files(path = indir_all_counts, pattern = "\\_trimmed_count_matrix.csv$", full.names = TRUE)
-
-# Initialise empty list to store read counts for each sample
-read_counts <- list()
-# Load necessary libraries
 library(edgeR)
 library(readr)
 library(dplyr)

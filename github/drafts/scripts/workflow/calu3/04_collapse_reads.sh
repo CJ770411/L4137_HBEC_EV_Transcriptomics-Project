@@ -2,16 +2,16 @@
 
 
 #==============================================================================#
-# Script Name: 04_map_reads.sh
+# Script Name: 04_collapse_reads.sh
 #
 # Last updated: 14/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
-#   - Map reads to known mature miRNA sequences to isolate miRNAs
+#   - Collapse reads for downstream compatbility with quantifier.pl
 #
 # Usage:
 #   Execute from script directory using:
-#     sbatch 04_map_reads.sh
+#     sbatch 04_collapse_reads.sh
 #
 # Software:
 #   miRDeep2 v2.0.1.3
@@ -41,10 +41,10 @@
 #SBATCH --cpus-per-task=4                              # Number of cores
 #SBATCH --mem=20G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=02:00:00                                # Run time limit (hh:mm:ss)
-#SBATCH --job-name=04_map_reads                             # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_03/04_map_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_03/04_map_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --array=0-11                                   # One job per sample (12 samples)
+#SBATCH --job-name=04_collapse_reads                             # Name assigned to job allocation
+#SBATCH --output=../../../logs/calu3/04_collapse_reads/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../../logs/calu3/04_collapse_reads/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --array=0-14                                   # One job per sample (15 samples)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -64,7 +64,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_03/04_map_reads")
+LOG_DIR=$(realpath "../../../logs/calu3/04_collapse_reads")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -89,15 +89,15 @@ echo "Date initialised" "$(date)" >> "$LOG"
 # Initiation message
 echo "==> Setting up in-script navigation" >> "$LOG"
 
-#   1. Set project root (2 levels above script directory)
-PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../..")" 
+#   1. Set project root (3 levels above script directory)
+PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../../..")" 
 echo "Project Root: $PROJECT_ROOT" >> "$LOG"
 
-#   2. Define this script
-SCRIPT=${PROJECT_ROOT}/scripts/analysis_pipeline/${SLURM_JOB_NAME}.sh
+#   3. Define this script
+SCRIPT=${PROJECT_ROOT}/scripts/workflow/calu3/${SLURM_JOB_NAME}.sh
 echo "Script Name: $SLURM_JOB_NAME.sh" >> "$LOG"
 
-#   3. Ensure script is called from directory containing script
+#   4. Ensure script is called from directory containing script
 #      Exit status 1 if script not found
 if [ ! -f $SCRIPT ]; then
    echo "Error: script must be called from the directory containing $SLURM_JOB_NAME.sh" >&2
@@ -119,7 +119,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease_mirdeep2"
+CONDA_ENV="L4137_mirdeep2"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -166,7 +166,7 @@ echo "==> Setting input files" >> "$LOG"
 echo "Input file(s):" >> "$LOG"
 
 # Trimmed reads directory
-INDIR_TRIMMED_READS="${PROJECT_ROOT}/results/analysis_pipeline/run_03/01_raw_read_trimming/cutadapt"
+INDIR_TRIMMED_READS="${PROJECT_ROOT}/results/calu3/01_raw_read_trimming"
 echo "$(timestamp)" "==> Directory containing trimmed reads: "$INDIR_TRIMMED_READS >> "$LOG"
 
 # Completion message
@@ -212,7 +212,7 @@ echo "==> Setting input files: Finished" >> "$LOG"
 echo "==> Setting output directories" >> "$LOG"
 
 # Outputs from alignment (mapper.pl)
-OUTDIR_MAP="${PROJECT_ROOT}/results/analysis_pipeline/run_03/04_map_reads/mapper"
+OUTDIR_MAP="${PROJECT_ROOT}/results/calu3/04_collapse_reads/mapper"
 
 # Combine directories into array for simultaenous creation later
 DIR_LIST=("$OUTDIR_MAP")
@@ -229,7 +229,7 @@ echo "==> Setting output directories: Finished" >> "$LOG"
 echo "==> Setting output files" >> "$LOG"
 
 COLLAPSED_READS="$OUTDIR_MAP/${SAMPLE_NAME}_collapsed.fasta"
-MAPPED_READS="$OUTDIR_MAP/${SAMPLE_NAME}_vs_genome_GRCh38.arf" 
+
 
 
 
@@ -275,7 +275,7 @@ echo "==> Verifying/creating output directories: Finished" >> "$LOG"
 echo "==> Setting parameters" >> "$LOG"
 
 # Mapping filters:
-MIN_LENGTH=17
+MIN_LENGTH=18
 
 echo "Mapping Filters:" >> "$LOG" 
 echo "MIN_LENGTH=$MIN_LENGTH" >> "$LOG"  
@@ -299,7 +299,7 @@ TEMP_TRIMMED_FASTQ=$(basename "$SAMPLE_FILE" .gz)
 # Create temporary unzipped FASTQ file
 gunzip -c "$SAMPLE_FILE" > "$TEMP_TRIMMED_FASTQ"
 
-# Execute mapping
+# Collapse reads
 mapper.pl \
 "$TEMP_TRIMMED_FASTQ" \
 -e -h -j -m \

@@ -167,3 +167,82 @@ sbatch --dependency=afterok:$JOB_05 --wrap \
 "echo \"\$(date): Completed script: 05_read_quantification.sh\" >> '$LOG'"
 
 
+
+
+#==========================#
+# EXECUTE WORKFLOW - Calu-3
+#==========================#
+
+# Navigate to script directory
+cd "${PROJECT_ROOT}/scripts/workflow/calu3"
+
+
+## 6. Raw read trimming
+
+# Script: 01_raw_read_trimming.sh
+
+
+# Execute script
+JOB_06=$(sbatch --parsable --dependency=afterok:$JOB_05 01_raw_read_trimming.sh)
+
+# Record completion of script in log file
+sbatch --dependency=afterok:$JOB_06 --wrap \
+"echo \"\$(date): Completed script: 01_raw_read_trimming.sh\" >> '$LOG'"
+
+
+
+## 7. Sequencing Reads Quality Control
+
+
+# Script: 02_reads_qc.sh
+
+# Execute script
+JOB_07=$(sbatch --parsable --dependency=afterok:$JOB_06 02_reads_qc.sh)
+
+# Record completion of script in log file
+sbatch --dependency=afterok:$JOB_07 --wrap \
+"echo \"\$(date): Completed script: 02_reads_qc.sh\" >> '$LOG'"
+
+
+
+## 8. Download miRNA reference databases
+
+
+# Script: 03_download_mirna_references.sh
+
+# Execute script
+JOB_08=$(sbatch --parsable --dependency=afterok:$JOB_07 03_download_mirna_references.sh)
+
+# Record completion of script in log file
+sbatch --dependency=afterok:$JOB_08 --wrap \
+"echo \"\$(date): Completed script: 03_download_mirna_references.sh\" >> '$LOG'"
+
+
+
+## 9. Collapse sequencing reads
+
+
+# Script: 04_collapse_reads.sh
+
+# Execute script
+JOB_09=$(sbatch --parsable --dependency=afterok:$JOB_08 04_collapse_reads.sh)
+
+# Record completion of script in log file
+sbatch --dependency=afterok:$JOB_09 --wrap \
+"echo \"\$(date): Completed script: 04_collapse_reads.sh\" >> '$LOG'"
+
+
+
+## 10. Quantify miRNA expression
+
+
+# Script: 05_read_quantification.sh
+
+# Execute script
+JOB_10=$(sbatch --parsable --dependency=afterok:$JOB_09 05_read_quantification.sh)
+
+# Record completion of script in log file
+sbatch --dependency=afterok:$JOB_10 --wrap \
+"echo \"\$(date): Completed script: 05_read_quantification.sh\" >> '$LOG'"
+
+

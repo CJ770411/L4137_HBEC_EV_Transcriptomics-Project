@@ -7,6 +7,7 @@
 # Last updated: 18/05/2026 (dd/mm/yyyy)
 #
 # Purpose:
+#   - Map reads to known mature miRNA sequences to isolate miRNAs
 #   - Quantify miRNA expression to enable differential expression analysis
 #
 # Usage:
@@ -42,9 +43,9 @@
 #SBATCH --mem=16G                                      # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
 #SBATCH --job-name=05_read_quantification                             # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_03/05_read_quantification/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_03/05_read_quantification/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --array=0-11                                   # One job per sample (12 samples)
+#SBATCH --output=../../../logs/calu3/05_read_quantification/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../../logs/calu3/05_read_quantification/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --array=0-14                                   # One job per sample (15 samples)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -64,7 +65,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_03/05_read_quantification")
+LOG_DIR=$(realpath "../../../logs/calu3/05_read_quantification")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -88,15 +89,15 @@ echo "Date initialised" "$(date)" >> "$LOG"
 # Initiation message
 echo "==> Setting up in-script navigation" >> "$LOG"
 
-#   1. Set project root (2 levels above script directory)
-PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../..")" 
+#   1. Set project root (3 levels above script directory)
+PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../../..")" 
 echo "Project Root: $PROJECT_ROOT" >> "$LOG"
 
-#   2. Define this script
-SCRIPT=${PROJECT_ROOT}/scripts/analysis_pipeline/${SLURM_JOB_NAME}.sh
+#   3. Define this script
+SCRIPT=${PROJECT_ROOT}/scripts/workflow/calu3/${SLURM_JOB_NAME}.sh
 echo "Script Name: $SLURM_JOB_NAME.sh" >> "$LOG"
 
-#   3. Ensure script is called from directory containing script
+#   4. Ensure script is called from directory containing script
 #      Exit status 1 if script not found
 if [ ! -f $SCRIPT ]; then
    echo "Error: script must be called from the directory containing $SLURM_JOB_NAME.sh" >&2
@@ -117,7 +118,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease_mirdeep2"
+CONDA_ENV="L4137_mirdeep2"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
@@ -178,7 +179,7 @@ echo "==> Setting input directories: Finished" >> "$LOG"
 echo "==> Setting input files" >> "$LOG"
 
 # Collapsed read files (outoput from mapper.pl) into an array for parallel analysis
-COLLAPSED_FILES="${PROJECT_ROOT}/results/analysis_pipeline/run_03/04_map_reads/mapper"
+COLLAPSED_FILES="${PROJECT_ROOT}/results/calu3/04_collapse_reads/mapper"
 
 # Load collapsed reads into an array for parallel analysis
 mapfile -t COLLAPSED_FILES_ARRAY < <(find "$COLLAPSED_FILES" -name "*_collapsed.fasta" | sort)
@@ -220,10 +221,10 @@ echo "==> Setting output directories" >> "$LOG"
 
 # Directory for quantifier.pl outputs
 #       Distinct directory for each sample analysed
-OUTDIR_SAMPLE="${PROJECT_ROOT}/results/analysis_pipeline/run_03/05_read_quantification/${SAMPLE_NAME}"
+OUTDIR_SAMPLE="${PROJECT_ROOT}/results/calu3/05_read_quantification/${SAMPLE_NAME}"
 
 #       Directory containing only count matrices for all samples
-OUTDIR_ALL_SAMPLES="${PROJECT_ROOT}/results/analysis_pipeline/run_03/05_read_quantification/all_samples"
+OUTDIR_ALL_SAMPLES="${PROJECT_ROOT}/results/calu3/05_read_quantification/all_samples"
 
 # Combine directories into array for simultaenous creation later
 DIR_LIST=("$OUTDIR_SAMPLE" "$OUTDIR_ALL_SAMPLES")

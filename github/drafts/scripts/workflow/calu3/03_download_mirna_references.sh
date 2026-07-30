@@ -47,8 +47,8 @@
 #SBATCH --mem=8G                                       # Memory allocation ("M" = mb, "G" = gb)
 #SBATCH --time=01:00:00                                # Run time limit (hh:mm:ss)
 #SBATCH --job-name=03_download_mirna_references                             # Name assigned to job allocation
-#SBATCH --output=../../logs/analysis_pipeline/run_03/03_download_mirna_references/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
-#SBATCH --error=../../logs/analysis_pipeline/run_03/03_download_mirna_references/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --output=../../../logs/calu3/03_download_mirna_references/slurm-%x-%j.out               # Standard output log file ("%x" is replaced with job name, "%j" is replaced with job ID)
+#SBATCH --error=../../../logs/calu3/03_download_mirna_references/slurm-%x-%j.err                # Standard error log file ("%x" is replaced with job name, "%j" is replaced with job ID)
 
 # Email notifications for SLURM events (optional - uncomment and edit if desired)
 # #SBATCH --mail-type=<type> # <type> = "BEGIN", "END", "FAIL", "ALL"
@@ -68,7 +68,7 @@ set -eo pipefail
 #                 to track script progress and key information
 
 # Define log directory
-LOG_DIR=$(realpath "../../logs/analysis_pipeline/run_03/03_download_mirna_references")
+LOG_DIR=$(realpath "../../../logs/calu3/03_download_mirna_references")
 
 # Verify/create log directory
 mkdir -p "${LOG_DIR}"
@@ -93,15 +93,15 @@ echo "Date initialised:" "$(date)" >> "$LOG"
 # Initiation message
 echo "==> Setting up in-script navigation" >> "$LOG"
 
-#   1. Set project root (2 levels above script directory)
-PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../..")" 
+#   1. Set project root (3 levels above script directory)
+PROJECT_ROOT="$(realpath "${SLURM_SUBMIT_DIR}/../../..")" 
 echo "Project Root: $PROJECT_ROOT" >> "$LOG"
 
-#   2. Define this script
-SCRIPT=${PROJECT_ROOT}/scripts/analysis_pipeline/${SLURM_JOB_NAME}.sh
+#   3. Define this script
+SCRIPT=${PROJECT_ROOT}/scripts/workflow/calu3/${SLURM_JOB_NAME}.sh
 echo "Script Name: $SLURM_JOB_NAME.sh" >> "$LOG"
 
-#   3. Ensure script is called from directory containing script
+#   4. Ensure script is called from directory containing script
 #      Exit status 1 if script not found
 if [ ! -f $SCRIPT ]; then
    echo "Error: script must be called from the directory containing $SLURM_JOB_NAME.sh" >&2
@@ -122,7 +122,7 @@ echo "==> Setting up in-script navigation: Finished" >> "$LOG"
 echo "==> Setting up environment" >> "$LOG"
 
 # Define Conda environment
-CONDA_ENV="L4137_01_Protease_mirdeep2"
+CONDA_ENV="L4137_mirdeep2"
 
 # Activate Conda environment:
 #   1) Ensure bash profile exists (exit status 1 if profile not found)
