@@ -19,7 +19,7 @@ publications_125 <- c(5, 85, 3, 98, 44, 89)
 pdf("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/viva/presentation/drafts/figures/piechart_125.pdf", width = 7, height = 7)
 
 # Create pie chart
-pie(publications_125, labels = terms_125, col = pie_colours, density = 75, clockwise = TRUE)
+pie(publications_125, labels = terms_125, col = pie_colours, density = 75, cex = 1.4, clockwise = TRUE)
 
 # Save plot
 dev.off()
@@ -38,7 +38,7 @@ publications_574 <- c(0, 12, 1, 19, 13, 20)
 pdf("~/GIT/L4137_HBEC_EV_Transcriptomics-Project/viva/presentation/drafts/figures/piechart_574.pdf", width = 7, height = 7)
 
 # Create pie chart
-pie(publications_574, labels = terms_574, col = pie_colours, density = 75, clockwise = TRUE)
+pie(publications_574, labels = terms_574, col = pie_colours, density = 75, cex = 1.4, clockwise = F)
 
 # Save plot
 dev.off()
