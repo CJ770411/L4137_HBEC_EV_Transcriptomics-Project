@@ -1,5 +1,5 @@
 # L4137_HBEC_EV_Transcriptomics-Project
-This repository contains the working drafts for L4137_HBEC_EV_Transcriptomics. This is to track progress only - it is not the final project
+This repository contains the working drafts for https://github.com/CJ770411/L4137_HBEC_EV_Transcriptomics. This is to track progress only - it is not the final project
 
 ## Useful Information
 This project uses transcriptomics to examine the miRNA cargo of extracellular vesicles (EVs) produced by various types of human bronchial epithelial cells following exposure to various commonly-found allergens. 
@@ -13,7 +13,12 @@ The project is split into two parts (to be performed sequentially):
 
 ### File Locations
 
-#### 01_Protease
+[**Thesis drafts:**](/write_up/drafts/)
+- This folder contains all the plans and drafts for each section of the thesis write-up.
+
+`write_up/drafts`
+
+
 [**Lab notebook:**](/01_Protease/docs/notebooks/worklog/project_notes.ipynb)
 - This document examines and discusses data, results and other relevant information.
 
@@ -35,6 +40,10 @@ The project is split into two parts (to be performed sequentially):
 `01_Protease/docs/notebooks/worklog/investigations.ipynb`
 
 
-[**Scripts:**](/01_Protease/src/scripts/)
+[**01_Protease Scripts:**](/01_Protease/src/scripts/)
 
 `01_Protease/src/scripts`
+
+[**02_HDM_Dog Scripts:**](/02_HDM_Dog/src/scripts/)
+
+`02_HDM_Dog/src/scripts`
