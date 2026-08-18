@@ -1,17 +1,16 @@
 # L4137_HBEC_EV_Transcriptomics-Project
-This repository contains the working drafts for https://github.com/CJ770411/L4137_HBEC_EV_Transcriptomics. This is to track progress only - it is not the final project
+This repository contains the plans and drafts for https://github.com/CJ770411/L4137_HBEC_EV_Transcriptomics. **This is to track progress only - it is not the final project**
 
 ## Useful Information
-This project uses transcriptomics to examine the miRNA cargo of extracellular vesicles (EVs) produced by various types of human bronchial epithelial cells following exposure to various commonly-found allergens. 
 
 The project is split into two parts (to be performed sequentially):
 
 1. 01_Protease - Primary human bronchial epithelial cells exposed to different concentrations of protease allergens (e.g. household cleaning products).
 
-2. 02_HDM_Dog - Calu-3 (lung adenocarcinoma) human bronchial epithelial cell line exposed to different concentrations of protease house dust mite (HDM) or dog allergens.
+2. 02_HDM_Dog - Calu-3 (lung adenocarcinoma) human bronchial epithelial cell line exposed to different concentrations of house dust mite (HDM) or dog allergens.
 
 
-### File Locations
+## Links to files
 
 [**Thesis drafts:**](/write_up/drafts/)
 - This folder contains all the plans and drafts for each section of the thesis write-up.
